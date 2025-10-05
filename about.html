@@ -1,0 +1,315 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About json2apex - Free JSON to Apex Converter</title>
+    <meta name="description" content="Learn about json2apex, the best free online tool to convert JSON to Apex classes for Salesforce, including test classes. Fast, reliable, and user-friendly.">
+    <meta name="keywords" content="about json2apex, JSON to Apex, Salesforce Apex, Apex class generator, JSON parser, Salesforce development, Apex test class">
+    <meta name="author" content="json2apex Team">
+    <meta name="robots" content="index, follow">
+    <meta name="revisit-after" content="1 days">
+    <link rel="canonical" href="https://www.json2apex.com/about.html">
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f5f5f5;
+            --container-bg: white;
+            --text-color: #333;
+            --primary-color: #6200ee;
+            --primary-dark: #3700b3;
+            --success-color: #4caf50;
+            --error-color: #d32f2f;
+            --border-color: #6200ee;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #212121;
+            --container-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --primary-dark: #3700b3;
+            --success-color: #4caf50;
+            --error-color: #cf6679;
+            --border-color: #bb86fc;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .theme-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .hero .cta-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .hero .cta-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .content-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        .content-section h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .content-section p {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .content-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .content-section ul li {
+            padding: 10px 0;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .content-section ul li::before {
+            content: "✓";
+            color: var(--success-color);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: auto;
+            width: 100%;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo-content">
+            <div class="logo-text">json2apex.com</div>
+            <div class="subtitle">Best JSON to Apex Converter</div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle">Dark Mode</label>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>json2apex - The Best JSON to Apex Converter</h1>
+        <p>Effortlessly convert JSON to Apex classes for Salesforce, complete with test classes. Fast, reliable, and user-friendly—perfect for Salesforce developers.</p>
+        <button class="cta-button" onclick="window.location.href='index.html'">Start Converting JSON Now</button>
+    </section>
+
+    <section class="content-section">
+        <h2>About json2apex</h2>
+        <p>json2apex is the ultimate online tool for Salesforce developers to convert JSON to Apex classes effortlessly. Generate Apex wrapper classes and test classes from your JSON data, supporting complex nested objects and arrays.</p>
+        <p>JSON (JavaScript Object Notation) is widely used in Salesforce for API integrations, but manually writing Apex classes to parse JSON can be time-consuming and error-prone. json2apex simplifies this process by automatically generating structured Apex classes and corresponding test classes, ensuring compatibility with Salesforce’s strict governor limits and best practices.</p>
+        <p>Our tool runs entirely in your browser, ensuring privacy and speed. It’s perfect for Salesforce developers working on integrations, custom APIs, or data migrations.</p>
+        <h2>How to Use json2apex</h2>
+        <p>Three easy ways to input JSON:</p>
+        <ul>
+            <li>Upload from your local machine</li>
+            <li>Copy and paste into the box</li>
+            <li>Type it manually</li>
+        </ul>
+        <p>Once your JSON is entered, specify a class name, choose whether to include parse methods, and click "Generate Class" to get your Apex class and test class instantly.</p>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 json2apex. All rights reserved. | <a href="#top">Back to Top</a></p>
+    </footer>
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const currentTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (currentTheme === 'dark' || (!currentTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            darkModeToggle.checked = true;
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>
