@@ -3,125 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>json2apex - the best JSON 2 apex tool</title>
-    <!-- SEO Meta Tags -->
+    <title>json2apex - The Best JSON to Apex Tool</title>
     <meta name="description" content="json2apex is the best tool to convert JSON to Apex classes for Salesforce, including test classes. Fast, reliable, and user-friendly.">
     <meta name="keywords" content="json2apex, JSON to Apex, Salesforce Apex, Apex class generator, JSON parser, Salesforce development, Apex test class">
     <meta name="author" content="json2apex Team">
     <meta name="robots" content="index, follow">
-    <!-- Material Design Components CSS -->
+    <meta name="revisit-after" content="1 days">
+    <link rel="canonical" href="https://www.json2apex.com">
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
-    <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Prism.js CSS for syntax highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
-    <!-- Prism.js Line Numbers CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #f5f5f5;
+            --container-bg: white;
+            --text-color: #333;
+            --primary-color: #6200ee;
+            --primary-dark: #3700b3;
+            --success-color: #4caf50;
+            --error-color: #d32f2f;
+            --border-color: #6200ee;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --output-bg: #212121;
+            --output-text: white;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #212121;
+            --container-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --primary-dark: #3700b3;
+            --success-color: #4caf50;
+            --error-color: #cf6679;
+            --border-color: #bb86fc;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.5);
+            --output-bg: #1a1a1a;
+            --output-text: #e0e0e0;
+        }
+
         body {
-            background-color: #f5f5f5;
+            background-color: var(--bg-color);
             display: flex;
             flex-direction: column;
-            align-items: center;
             min-height: 100vh;
             margin: 0;
             font-family: 'Roboto', sans-serif;
+            color: var(--text-color);
             transition: background-color 0.3s, color 0.3s;
         }
-        .container {
-            background-color: white;
-            padding: 24px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            max-width: 1200px;
-            width: 100%;
-            margin: 16px;
-        }
-        .header {
+
+        nav {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            width: 100%;
+            box-sizing: border-box;
         }
-        .banner {
-            font-size: 2.5rem;
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text {
+            font-size: 24px;
             font-weight: bold;
-            color: #6200ee;
-            font-family: 'Roboto', sans-serif;
-            text-align: left;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            margin: 0;
         }
+
+        .subtitle {
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .theme-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            max-width: 1200px;
+            width: 100%;
+            margin: 16px;
+            box-sizing: border-box;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
         .mdc-text-field {
             width: 100%;
             margin-bottom: 16px;
         }
+
         .mdc-text-field--outlined {
-            padding-top: 8px; /* Prevent label overlap */
+            padding-top: 8px;
         }
+
         .mdc-text-field--outlined .mdc-floating-label {
-            top: 18px; /* Adjust label position */
+            top: 18px;
             transform: translateY(-50%) scale(1);
         }
+
         .mdc-text-field--outlined.mdc-text-field--focused .mdc-floating-label,
         .mdc-text-field--outlined .mdc-text-field__input:not(:placeholder-shown) + .mdc-floating-label {
             transform: translateY(-100%) scale(0.75);
             top: 0;
         }
+
         .mdc-text-field--textarea .mdc-text-field__input {
             border-radius: 20px;
             padding: 16px;
-            border: 1px solid #6200ee;
+            border: 1px solid var(--border-color);
         }
+
         .mdc-text-field--outlined .mdc-text-field__input {
             border-radius: 20px;
             padding: 16px;
         }
+
         .text-area-container {
             margin-bottom: 16px;
-            position: relative; /* For positioning copy buttons */
+            position: relative;
         }
+
         .button-container {
             margin-bottom: 16px;
         }
+
         .mdc-button {
             margin-right: 8px;
             margin-bottom: 8px;
         }
+
         .output-pre {
-            background-color: #212121;
-            color: white;
+            background-color: var(--output-bg);
+            color: var(--output-text);
             padding: 16px;
             border-radius: 20px;
-            border: 1px solid #6200ee;
+            border: 1px solid var(--border-color);
             max-height: 400px;
             overflow: auto;
             font-family: 'Roboto Mono', monospace;
-            position: relative; /* For positioning copy button */
+            position: relative;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
+
         .copy-button {
             position: absolute;
             top: 8px;
             right: 8px;
             padding: 4px 8px;
-            background-color: #6200ee;
-            color: #ffffff !important; /* Ensure text is white */
-            z-index: 2; /* Above Prism.js content and line numbers */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            background-color: var(--primary-color);
+            color: white !important;
+            z-index: 2;
+            box-shadow: var(--shadow);
             border-radius: 4px;
             transition: background-color 0.3s;
         }
+
         .copy-button.copied-feedback {
-            background-color: #4caf50 !important; /* Green flash for feedback */
+            background-color: var(--success-color) !important;
         }
+
         .copy-button .mdc-button__label {
             font-size: 14px;
-            color: #ffffff !important; /* Explicitly set text color */
+            color: white !important;
         }
+
         .copy-tooltip {
             position: absolute;
-            top: 36px; /* Below the button */
+            top: 36px;
             right: 8px;
             background-color: #333;
-            color: #ffffff;
+            color: white;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
@@ -129,69 +224,73 @@
             opacity: 0;
             transition: opacity 0.3s;
         }
+
         .copy-tooltip.show {
             opacity: 1;
         }
-        /* Ensure Prism.js doesn't override copy button positioning */
+
         .output-pre code {
             display: block;
             padding: 0;
             background: none;
             border: none;
         }
-        /* Line numbers styling */
+
         .line-numbers .line-numbers-rows {
-            border-right: 1px solid #6200ee;
+            border-right: 1px solid var(--border-color);
         }
-        .intro-text {
-            font-size: 1.1rem;
-            margin-bottom: 24px;
-            line-height: 1.5;
-            color: #333;
-            margin-left: 16px; /* Add space on left side */
-        }
+
         .class-name-field {
-            margin-bottom: 24px; /* Add space on bottom of class name */
+            margin-bottom: 24px;
         }
+
         .class-name-label {
             display: block;
             font-size: 1rem;
-            color: #333;
+            color: var(--text-color);
             margin-bottom: 8px;
         }
+
         .class-name-input {
             width: 100%;
             border-radius: 20px;
             padding: 16px;
-            border: 1px solid #6200ee;
+            border: 1px solid var(--border-color);
             font-size: 1rem;
             box-sizing: border-box;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
         }
+
         .class-name-input:focus {
             outline: none;
-            border-color: #6200ee;
+            border-color: var(--primary-color);
             box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.2);
         }
+
         .checkbox-container {
             margin-bottom: 16px;
             display: flex;
             align-items: center;
         }
+
         .checkbox-label {
             font-size: 1rem;
-            color: #333;
+            color: var(--text-color);
             margin-left: 8px;
         }
+
         .toast {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: white;
-            color: #d32f2f;
-            padding: 12px 40px 12px 24px; /* Extra padding-right for close button */
-            border: 1px solid #6200ee;
+            background-color: var(--container-bg);
+            color: var(--error-color);
+            padding: 12px 40px 12px 24px;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow);
             z-index: 1000;
             opacity: 0;
             transform: translateY(20px);
@@ -204,39 +303,64 @@
             align-items: center;
             justify-content: space-between;
         }
+
         .toast.show {
             opacity: 1;
             transform: translateY(0);
         }
+
         .toast-close {
             background: none;
             border: none;
-            color: #6200ee;
+            color: var(--primary-color);
             font-size: 1rem;
             cursor: pointer;
             padding: 0;
             margin-left: 8px;
             line-height: 1;
         }
+
         .toast-close:hover {
-            color: #3700b3; /* Darker purple on hover */
+            color: var(--primary-dark);
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: auto;
+            width: 100%;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
+    <nav>
+        <div class="logo-content">
+            <div class="logo-text">json2apex.com</div>
+            <div class="subtitle">Best JSON to Apex Converter</div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle">Dark Mode</label>
+            </div>
+        </div>
+    </nav>
+
     <div class="container">
-        <div class="header">
-            <div class="banner">JSON2Apex</div>
-        </div>
-        <div class="intro-text">
-            <p>JSON2Apex is the ultimate online tool for Salesforce developers to convert JSON to Apex classes effortlessly. Generate Apex wrapper classes and test classes from your JSON data. Supports complex nested objects and arrays. Perfect for handling complex nested objects and arrays.</p>
-            <p>Three easy ways to input JSON:</p>
-            <ul>
-                <li>Upload from your local machine</li>
-                <li>Copy and paste into the box</li>
-                <li>Type it manually</li>
-            </ul>
-        </div>
         <div class="class-name-field">
             <label class="class-name-label" for="className">Apex Class Name</label>
             <input id="className" type="text" class="class-name-input" value="WrapperClass" aria-label="Apex Class Name">
@@ -286,13 +410,15 @@
         </div>
     </div>
 
-    <!-- Material Design Components JS -->
+    <footer>
+        <p>&copy; 2025 json2apex. All rights reserved. | <a href="#top">Back to Top</a></p>
+    </footer>
+
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-    <!-- Prism.js for syntax highlighting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-apex.min.js"></script>
-    <!-- Prism.js Line Numbers Plugin -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script>
         // Initialize Material Design Components
         document.querySelectorAll('.mdc-text-field').forEach((textField) => {
@@ -302,47 +428,62 @@
             mdc.ripple.MDCRipple.attachTo(button);
         });
 
-        // Function to show toast notification
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const currentTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (currentTheme === 'dark' || (!currentTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            darkModeToggle.checked = true;
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Show Toast Notification
         function showToast(message) {
             const toast = document.createElement('div');
             toast.className = 'toast';
             toast.setAttribute('role', 'alert');
             toast.setAttribute('aria-live', 'assertive');
 
-            // Add message
             const messageSpan = document.createElement('span');
             messageSpan.textContent = message;
             toast.appendChild(messageSpan);
 
-            // Add close button
             const closeButton = document.createElement('button');
             closeButton.className = 'toast-close';
-            closeButton.innerHTML = '&times;'; // Using × symbol
+            closeButton.innerHTML = '&times;';
             closeButton.setAttribute('aria-label', 'Close toast');
             toast.appendChild(closeButton);
 
             document.body.appendChild(toast);
 
-            // Trigger slide-in animation
             setTimeout(() => {
                 toast.classList.add('show');
             }, 10);
 
-            // Auto-remove after 30 seconds
             const timeoutId = setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => {
                     toast.remove();
-                }, 300); // Wait for fade-out animation
+                }, 300);
             }, 30000);
 
-            // Close button handler
             closeButton.addEventListener('click', () => {
                 clearTimeout(timeoutId);
                 toast.classList.remove('show');
                 setTimeout(() => {
                     toast.remove();
-                }, 300); // Wait for fade-out animation
+                }, 300);
             });
         }
 
@@ -354,12 +495,11 @@
                 reader.onload = function(e) {
                     const content = e.target.result;
                     try {
-                        JSON.parse(content); // Validate JSON
-                        document.getElementById('jsonInput').value = content; // Replace textarea content
+                        JSON.parse(content);
+                        document.getElementById('jsonInput').value = content;
                     } catch (err) {
                         showToast('Invalid JSON file: ' + err.message);
                     }
-                    // Reset file input to allow re-uploading the same file
                     document.getElementById('jsonFileUpload').value = '';
                 };
                 reader.readAsText(file);
@@ -370,17 +510,15 @@
         function copyToClipboard(button, elementId) {
             const codeElement = document.querySelector(`#${elementId} code`);
             if (!codeElement) {
-                console.error('Code element not found for ' + elementId);
                 showToast('Code element not found for ' + elementId);
                 return;
             }
-            const text = codeElement.innerText.trim(); // Use innerText to get visible text, trim to remove extra spaces
+            const text = codeElement.innerText.trim();
             if (!text) {
                 showToast('No content to copy!');
                 return;
             }
             navigator.clipboard.writeText(text).then(() => {
-                // Apply feedback styling
                 button.classList.add('copied-feedback');
                 const tooltip = button.querySelector('.copy-tooltip');
                 tooltip.classList.add('show');
@@ -389,7 +527,6 @@
                     tooltip.classList.remove('show');
                 }, 1000);
             }).catch(err => {
-                console.error('Failed to copy: ', err);
                 showToast('Failed to copy to clipboard! Please try again.');
             });
         }
@@ -431,6 +568,7 @@
             });
         }
 
+        // Generate Apex Class
         function generateApexClass() {
             const jsonInput = document.getElementById('jsonInput').value;
             const className = document.getElementById('className').value.trim() || 'WrapperClass';
@@ -438,7 +576,6 @@
             const apexOutput = document.querySelector('#apexOutput code');
             const testOutput = document.querySelector('#testOutput code');
 
-            // Reset output
             apexOutput.textContent = '';
             testOutput.textContent = '';
             document.querySelectorAll('.copy-button').forEach(button => {
@@ -447,17 +584,12 @@
             });
 
             try {
-                // Parse JSON
                 const jsonObj = JSON.parse(jsonInput);
 
-                // Track used class names to avoid duplicates
                 const usedClassNames = new Set([className]);
 
-                // Function to sanitize variable and class names
                 function sanitizeName(name) {
-                    // Replace non-alphanumeric with underscores, prefix digits
                     let sanitized = name.replace(/[^a-zA-Z0-9]/g, '_').replace(/^(\d)/, '_$1');
-                    // Check for Apex reserved keywords
                     const reservedKeywords = ['class', 'public', 'private', 'protected', 'static', 'void', 'null', 'true', 'false', 'if', 'else', 'for', 'while'];
                     if (reservedKeywords.includes(sanitized.toLowerCase())) {
                         sanitized = '_' + sanitized;
@@ -465,7 +597,6 @@
                     return sanitized;
                 }
 
-                // Function to generate unique class name
                 function getUniqueClassName(baseName) {
                     let name = sanitizeName(baseName);
                     let counter = 0;
@@ -478,7 +609,6 @@
                     return uniqueName;
                 }
 
-                // Function to map JSON types to Apex types
                 function getApexType(value, parentKey = '') {
                     if (value === null) return 'Object';
                     if (typeof value === 'string') return 'String';
@@ -502,7 +632,6 @@
                     return 'Object';
                 }
 
-                // Function to generate nested classes
                 function generateNestedClass(nestedClassName, obj) {
                     let nestedClass = `\n    public class ${nestedClassName} {\n`;
                     const nestedProperties = [];
@@ -515,12 +644,10 @@
                     return nestedClass;
                 }
 
-                // Generate Apex class
                 let apexClass = `public class ${className} {\n`;
                 const properties = [];
                 const nestedClasses = [];
 
-                // Generate properties for the main class
                 for (const [key, value] of Object.entries(jsonObj)) {
                     const apexType = getApexType(value, key);
                     properties.push(`    public ${apexType} ${sanitizeName(key)};`);
@@ -535,7 +662,6 @@
                 }
                 apexClass += '}';
 
-                // Generate Test Class
                 let testClass = `@isTest\nprivate class ${className}Test {\n`;
                 testClass += `    @isTest\n    static void test${className}() {\n`;
                 testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'").replace(/\n/g, '\\n')}';\n`;
@@ -559,7 +685,6 @@
                 testClass += `    }\n`;
                 testClass += '}\n';
 
-                // Display the generated classes
                 apexOutput.textContent = apexClass;
                 testOutput.textContent = testClass;
                 Prism.highlightAll();
@@ -568,7 +693,5 @@
             }
         }
     </script>
-    <!-- JSZip for creating ZIP file -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
 </html>
