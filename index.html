@@ -195,33 +195,33 @@
         </div>
         <div class="class-name-field">
             <label class="class-name-label" for="className">Apex Class Name</label>
-            <input id="className" type="text" class="class-name-input" value="WrapperClass">
+            <input id="className" type="text" class="class-name-input" value="WrapperClass" aria-label="Apex Class Name">
         </div>
         <div class="text-area-container">
-            <label class="mdc-typography--subtitle1">JSON Input</label>
-            <button class="mdc-button mdc-button--outlined" onclick="document.getElementById('jsonFileUpload').click();">
+            <label class="mdc-typography--subtitle1" for="jsonInput">JSON Input</label>
+            <button class="mdc-button mdc-button--outlined" onclick="document.getElementById('jsonFileUpload').click();" aria-label="Upload JSON File">
                 <span class="mdc-button__label">Upload JSON File</span>
             </button>
-            <input type="file" id="jsonFileUpload" accept=".json" style="display: none;">
+            <input type="file" id="jsonFileUpload" accept=".json" style="display: none;" aria-label="JSON File Upload">
             <div class="mdc-text-field mdc-text-field--textarea">
-                <textarea id="jsonInput" class="mdc-text-field__input" rows="15">{"name": "John", "age": 30, "isActive": true, "details": {"city": "New York", "zip": 10001}, "hobbies": ["reading", "gaming"], "contacts": [{"name": "Alice", "phone": "123-456-7890"}]}</textarea>
+                <textarea id="jsonInput" class="mdc-text-field__input" rows="15" aria-label="JSON Input">{"name": "John", "age": 30, "isActive": true, "details": {"city": "New York", "zip": 10001}, "hobbies": ["reading", "gaming"], "contacts": [{"name": "Alice", "phone": "123-456-7890"}]}</textarea>
             </div>
         </div>
         <div class="button-container">
-            <button class="mdc-button mdc-button--raised" onclick="generateApexClass()">
+            <button class="mdc-button mdc-button--raised" onclick="generateApexClass()" aria-label="Generate Apex Class">
                 <span class="mdc-button__label">Generate Class</span>
             </button>
-            <button class="mdc-button mdc-button--outlined" onclick="clearInput()">
+            <button class="mdc-button mdc-button--outlined" onclick="clearInput()" aria-label="Clear Input">
                 <span class="mdc-button__label">Clear Input</span>
             </button>
-            <button class="mdc-button mdc-button--outlined" onclick="downloadClasses()">
+            <button class="mdc-button mdc-button--outlined" onclick="downloadClasses()" aria-label="Download Classes">
                 <span class="mdc-button__label">Download Classes</span>
             </button>
         </div>
         <div class="text-area-container">
             <label class="mdc-typography--subtitle1">Generated Apex Class</label>
             <pre id="apexOutput" class="output-pre language-apex line-numbers"><code class="language-apex"></code>
-                <button class="mdc-button copy-button" onclick="copyToClipboard(this, 'apexOutput')">
+                <button class="mdc-button copy-button" onclick="copyToClipboard(this, 'apexOutput')" aria-label="Copy Apex Class">
                     <span class="mdc-button__label">Copy</span>
                     <span class="copy-tooltip">Copied!</span>
                 </button>
@@ -230,7 +230,7 @@
         <div class="text-area-container">
             <label class="mdc-typography--subtitle1">Generated Test Class</label>
             <pre id="testOutput" class="output-pre language-apex line-numbers"><code class="language-apex"></code>
-                <button class="mdc-button copy-button" onclick="copyToClipboard(this, 'testOutput')">
+                <button class="mdc-button copy-button" onclick="copyToClipboard(this, 'testOutput')" aria-label="Copy Test Class">
                     <span class="mdc-button__label">Copy</span>
                     <span class="copy-tooltip">Copied!</span>
                 </button>
@@ -378,9 +378,10 @@
                 const properties = [];
                 const nestedClasses = [];
 
-                // Function to sanitize variable names
+                // Function to sanitize variable names (improved to handle dots and special chars)
                 function sanitizeName(name) {
-                    return name.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^(\d)/, '_$1');
+                    // Replace dots, special chars, and spaces with underscores; ensure valid Apex identifier
+                    return name.replace(/[^a-zA-Z0-9]/g, '_').replace(/^(\d)/, '_$1');
                 }
 
                 // Function to map JSON types to Apex types
@@ -399,14 +400,15 @@
                         return `List<${elementType}>`;
                     }
                     if (typeof value === 'object') {
-                        const nestedClassName = `Inner${sanitizeName(parentKey)}${nestedClasses.length}`;
+                        if (Object.keys(value).length === 0) return 'Map<String, Object>';
+                        const nestedClassName = `Inner_${sanitizeName(parentKey)}_${nestedClasses.length}`;
                         nestedClasses.push(generateNestedClass(nestedClassName, value));
                         return nestedClassName;
                     }
                     return 'Object';
                 }
 
-                // Function to generate nested classes
+                // Function to generate nested classes with explicit parse methods
                 function generateNestedClass(nestedClassName, obj) {
                     let nestedClass = `\n    public class ${nestedClassName} {\n`;
                     const nestedProperties = [];
@@ -415,6 +417,7 @@
                         nestedProperties.push(`        public ${apexType} ${sanitizeName(key)};`);
                     }
                     nestedClass += nestedProperties.join('\n') + '\n';
+                    // Always include explicit parse method
                     nestedClass += `        public static ${nestedClassName} parse(String json) {\n`;
                     nestedClass += `            return (${nestedClassName}) System.JSON.deserialize(json, ${nestedClassName}.class);\n`;
                     nestedClass += `        }\n`;
@@ -430,6 +433,7 @@
 
                 apexClass += properties.join('\n') + '\n';
                 apexClass += nestedClasses.join('');
+                // Always include explicit parse method for main class
                 apexClass += `    public static ${className} parse(String json) {\n`;
                 apexClass += `        return (${className}) System.JSON.deserialize(json, ${className}.class);\n`;
                 apexClass += `    }\n`;
@@ -438,7 +442,7 @@
                 // Generate Test Class
                 let testClass = `@isTest\nprivate class ${className}Test {\n`;
                 testClass += `    @isTest\n    static void test${className}() {\n`;
-                testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'")}';\n`;
+                testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'").replace(/\n/g, '\\n')}';\n`;
                 testClass += `        ${className} wrapper = ${className}.parse(jsonString);\n`;
                 testClass += `        System.assertNotEquals(null, wrapper, 'Parsed wrapper should not be null');\n`;
                 for (const [key, value] of Object.entries(jsonObj)) {
@@ -453,7 +457,7 @@
                 }
                 testClass += `    }\n`;
                 testClass += `    @isTest\n    static void testParse() {\n`;
-                testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'")}';\n`;
+                testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'").replace(/\n/g, '\\n')}';\n`;
                 testClass += `        ${className} wrapper = ${className}.parse(jsonString);\n`;
                 testClass += `        System.assertNotEquals(null, wrapper, 'Parsed wrapper should not be null');\n`;
                 testClass += `    }\n`;
