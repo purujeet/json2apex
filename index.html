@@ -188,7 +188,7 @@
             right: 20px;
             background-color: white;
             color: #d32f2f;
-            padding: 12px 24px;
+            padding: 12px 40px 12px 24px; /* Extra padding-right for close button */
             border: 1px solid #6200ee;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -200,10 +200,26 @@
             font-size: 1rem;
             max-width: 400px;
             word-wrap: break-word;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         .toast.show {
             opacity: 1;
             transform: translateY(0);
+        }
+        .toast-close {
+            background: none;
+            border: none;
+            color: #6200ee;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 8px;
+            line-height: 1;
+        }
+        .toast-close:hover {
+            color: #3700b3; /* Darker purple on hover */
         }
     </style>
 </head>
@@ -290,9 +306,21 @@
         function showToast(message) {
             const toast = document.createElement('div');
             toast.className = 'toast';
-            toast.textContent = message;
             toast.setAttribute('role', 'alert');
             toast.setAttribute('aria-live', 'assertive');
+
+            // Add message
+            const messageSpan = document.createElement('span');
+            messageSpan.textContent = message;
+            toast.appendChild(messageSpan);
+
+            // Add close button
+            const closeButton = document.createElement('button');
+            closeButton.className = 'toast-close';
+            closeButton.innerHTML = '&times;'; // Using × symbol
+            closeButton.setAttribute('aria-label', 'Close toast');
+            toast.appendChild(closeButton);
+
             document.body.appendChild(toast);
 
             // Trigger slide-in animation
@@ -300,13 +328,22 @@
                 toast.classList.add('show');
             }, 10);
 
-            // Auto-remove after 3 seconds
-            setTimeout(() => {
+            // Auto-remove after 30 seconds
+            const timeoutId = setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => {
                     toast.remove();
                 }, 300); // Wait for fade-out animation
-            }, 3000);
+            }, 30000);
+
+            // Close button handler
+            closeButton.addEventListener('click', () => {
+                clearTimeout(timeoutId);
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300); // Wait for fade-out animation
+            });
         }
 
         // File Upload Handler
