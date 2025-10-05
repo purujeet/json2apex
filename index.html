@@ -177,6 +177,16 @@
             border-color: #6200ee;
             box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.2);
         }
+        .checkbox-container {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-label {
+            font-size: 1rem;
+            color: #333;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -196,6 +206,10 @@
         <div class="class-name-field">
             <label class="class-name-label" for="className">Apex Class Name</label>
             <input id="className" type="text" class="class-name-input" value="WrapperClass" aria-label="Apex Class Name">
+        </div>
+        <div class="checkbox-container">
+            <input type="checkbox" id="includeParse" checked aria-label="Include Parse Methods">
+            <label class="checkbox-label" for="includeParse">Include Parse Methods</label>
         </div>
         <div class="text-area-container">
             <label class="mdc-typography--subtitle1" for="jsonInput">JSON Input</label>
@@ -319,6 +333,7 @@
         function clearInput() {
             document.getElementById('jsonInput').value = '';
             document.getElementById('className').value = 'WrapperClass';
+            document.getElementById('includeParse').checked = true;
             document.querySelector('#apexOutput code').textContent = '';
             document.querySelector('#testOutput code').textContent = '';
             document.getElementById('errorMessage').style.display = 'none';
@@ -355,6 +370,7 @@
         function generateApexClass() {
             const jsonInput = document.getElementById('jsonInput').value;
             const className = document.getElementById('className').value.trim() || 'WrapperClass';
+            const includeParse = document.getElementById('includeParse').checked;
             const errorMessage = document.getElementById('errorMessage');
             const apexOutput = document.querySelector('#apexOutput code');
             const testOutput = document.querySelector('#testOutput code');
@@ -373,15 +389,32 @@
                 // Parse JSON
                 const jsonObj = JSON.parse(jsonInput);
 
-                // Generate Apex class
-                let apexClass = `public class ${className} {\n`;
-                const properties = [];
-                const nestedClasses = [];
+                // Track used class names to avoid duplicates
+                const usedClassNames = new Set([className]);
 
-                // Function to sanitize variable names (improved to handle dots and special chars)
+                // Function to sanitize variable and class names
                 function sanitizeName(name) {
-                    // Replace dots, special chars, and spaces with underscores; ensure valid Apex identifier
-                    return name.replace(/[^a-zA-Z0-9]/g, '_').replace(/^(\d)/, '_$1');
+                    // Replace non-alphanumeric with underscores, prefix digits
+                    let sanitized = name.replace(/[^a-zA-Z0-9]/g, '_').replace(/^(\d)/, '_$1');
+                    // Check for Apex reserved keywords
+                    const reservedKeywords = ['class', 'public', 'private', 'protected', 'static', 'void', 'null', 'true', 'false', 'if', 'else', 'for', 'while'];
+                    if (reservedKeywords.includes(sanitized.toLowerCase())) {
+                        sanitized = '_' + sanitized;
+                    }
+                    return sanitized;
+                }
+
+                // Function to generate unique class name
+                function getUniqueClassName(baseName) {
+                    let name = sanitizeName(baseName);
+                    let counter = 0;
+                    let uniqueName = name;
+                    while (usedClassNames.has(uniqueName)) {
+                        counter++;
+                        uniqueName = `${name}_${counter}`;
+                    }
+                    usedClassNames.add(uniqueName);
+                    return uniqueName;
                 }
 
                 // Function to map JSON types to Apex types
@@ -401,14 +434,14 @@
                     }
                     if (typeof value === 'object') {
                         if (Object.keys(value).length === 0) return 'Map<String, Object>';
-                        const nestedClassName = `Inner_${sanitizeName(parentKey)}_${nestedClasses.length}`;
+                        const nestedClassName = getUniqueClassName(parentKey);
                         nestedClasses.push(generateNestedClass(nestedClassName, value));
                         return nestedClassName;
                     }
                     return 'Object';
                 }
 
-                // Function to generate nested classes with explicit parse methods
+                // Function to generate nested classes
                 function generateNestedClass(nestedClassName, obj) {
                     let nestedClass = `\n    public class ${nestedClassName} {\n`;
                     const nestedProperties = [];
@@ -417,13 +450,14 @@
                         nestedProperties.push(`        public ${apexType} ${sanitizeName(key)};`);
                     }
                     nestedClass += nestedProperties.join('\n') + '\n';
-                    // Always include explicit parse method
-                    nestedClass += `        public static ${nestedClassName} parse(String json) {\n`;
-                    nestedClass += `            return (${nestedClassName}) System.JSON.deserialize(json, ${nestedClassName}.class);\n`;
-                    nestedClass += `        }\n`;
                     nestedClass += '    }\n';
                     return nestedClass;
                 }
+
+                // Generate Apex class
+                let apexClass = `public class ${className} {\n`;
+                const properties = [];
+                const nestedClasses = [];
 
                 // Generate properties for the main class
                 for (const [key, value] of Object.entries(jsonObj)) {
@@ -433,17 +467,18 @@
 
                 apexClass += properties.join('\n') + '\n';
                 apexClass += nestedClasses.join('');
-                // Always include explicit parse method for main class
-                apexClass += `    public static ${className} parse(String json) {\n`;
-                apexClass += `        return (${className}) System.JSON.deserialize(json, ${className}.class);\n`;
-                apexClass += `    }\n`;
+                if (includeParse) {
+                    apexClass += `    public static ${className} parse(String json) {\n`;
+                    apexClass += `        return (${className}) System.JSON.deserialize(json, ${className}.class);\n`;
+                    apexClass += `    }\n`;
+                }
                 apexClass += '}';
 
                 // Generate Test Class
                 let testClass = `@isTest\nprivate class ${className}Test {\n`;
                 testClass += `    @isTest\n    static void test${className}() {\n`;
                 testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'").replace(/\n/g, '\\n')}';\n`;
-                testClass += `        ${className} wrapper = ${className}.parse(jsonString);\n`;
+                testClass += `        ${className} wrapper = ${includeParse ? `${className}.parse(jsonString)` : `(${className}) System.JSON.deserialize(jsonString, ${className}.class)`};\n`;
                 testClass += `        System.assertNotEquals(null, wrapper, 'Parsed wrapper should not be null');\n`;
                 for (const [key, value] of Object.entries(jsonObj)) {
                     const sanitizedKey = sanitizeName(key);
@@ -458,7 +493,7 @@
                 testClass += `    }\n`;
                 testClass += `    @isTest\n    static void testParse() {\n`;
                 testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'").replace(/\n/g, '\\n')}';\n`;
-                testClass += `        ${className} wrapper = ${className}.parse(jsonString);\n`;
+                testClass += `        ${className} wrapper = ${includeParse ? `${className}.parse(jsonString)` : `(${className}) System.JSON.deserialize(jsonString, ${className}.class)`};\n`;
                 testClass += `        System.assertNotEquals(null, wrapper, 'Parsed wrapper should not be null');\n`;
                 testClass += `    }\n`;
                 testClass += '}\n';
