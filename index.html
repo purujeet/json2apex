@@ -14,7 +14,7 @@
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- Prism.js CSS for syntax highlighting -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" id="prism-theme">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
     <!-- Prism.js Line Numbers CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
     <style>
@@ -28,13 +28,6 @@
             font-family: 'Roboto', sans-serif;
             transition: background-color 0.3s, color 0.3s;
         }
-        body.dark-mode {
-            background-color: #121212;
-            color: #ffffff;
-        }
-        body.dark-mode #prism-theme {
-            content: url('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css');
-        }
         .container {
             background-color: white;
             padding: 24px;
@@ -43,10 +36,6 @@
             max-width: 1200px;
             width: 100%;
             margin: 16px;
-        }
-        .dark-mode .container {
-            background-color: #1e1e1e;
-            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
         }
         .header {
             display: flex;
@@ -60,9 +49,6 @@
             color: #6200ee;
             font-family: 'Roboto', sans-serif;
             text-align: left;
-        }
-        .dark-mode .banner {
-            color: #bb86fc;
         }
         .mdc-text-field {
             width: 100%;
@@ -84,9 +70,6 @@
             border-radius: 20px;
             padding: 16px;
             border: 1px solid #6200ee;
-        }
-        .dark-mode .mdc-text-field--textarea .mdc-text-field__input {
-            border: 1px solid #bb86fc;
         }
         .mdc-text-field--outlined .mdc-text-field__input {
             border-radius: 20px;
@@ -114,24 +97,9 @@
             font-family: 'Roboto Mono', monospace;
             position: relative; /* For positioning copy button */
         }
-        .dark-mode .output-pre {
-            background-color: #2c2c2c;
-            border: 1px solid #bb86fc;
-        }
         .error-message {
             color: #d32f2f;
             margin-bottom: 16px;
-        }
-        .dark-mode .error-message {
-            color: #ff867c;
-        }
-        .toggle-container {
-            display: flex;
-            align-items: center;
-        }
-        .toggle-label {
-            margin-left: 8px;
-            font-size: 1rem;
         }
         .copy-button {
             position: absolute;
@@ -144,10 +112,6 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             border-radius: 4px;
             transition: background-color 0.3s;
-        }
-        .dark-mode .copy-button {
-            background-color: #bb86fc;
-            color: #ffffff !important;
         }
         .copy-button.copied-feedback {
             background-color: #4caf50 !important; /* Green flash for feedback */
@@ -172,9 +136,6 @@
         .copy-tooltip.show {
             opacity: 1;
         }
-        .dark-mode .copy-tooltip {
-            background-color: #555;
-        }
         /* Ensure Prism.js doesn't override copy button positioning */
         .output-pre code {
             display: block;
@@ -186,8 +147,15 @@
         .line-numbers .line-numbers-rows {
             border-right: 1px solid #6200ee;
         }
-        .dark-mode .line-numbers .line-numbers-rows {
-            border-right: 1px solid #bb86fc;
+        .intro-text {
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+            line-height: 1.5;
+            color: #333;
+            margin-left: 16px; /* Add space on left side */
+        }
+        .class-name-field {
+            margin-bottom: 24px; /* Add space on bottom of class name */
         }
     </style>
 </head>
@@ -195,19 +163,17 @@
     <div class="container">
         <div class="header">
             <div class="banner">JSON2Apex</div>
-            <div class="toggle-container">
-                <div class="mdc-switch" id="darkModeSwitch">
-                    <div class="mdc-switch__track"></div>
-                    <div class="mdc-switch__thumb-underlay">
-                        <div class="mdc-switch__thumb">
-                            <input type="checkbox" id="darkModeToggle" class="mdc-switch__native-control" role="switch">
-                        </div>
-                    </div>
-                </div>
-                <!--label for="darkModeToggle" class="toggle-label">Dark Mode</label-->
-            </div>
         </div>
-        <div class="mdc-text-field mdc-text-field--outlined">
+        <div class="intro-text">
+            <p>JSON2Apex is the ultimate online tool for Salesforce developers to convert JSON to Apex classes effortlessly. Generate Apex wrapper classes and test classes from your JSON data. Supports complex nested objects and arrays. Perfect for handling complex nested objects and arrays.</p>
+            <p>Three easy ways to input JSON:</p>
+            <ul>
+                <li>Upload from your local machine</li>
+                <li>Copy and paste into the box</li>
+                <li>Type it manually</li>
+            </ul>
+        </div>
+        <div class="mdc-text-field mdc-text-field--outlined class-name-field">
             <label class="mdc-floating-label" for="className">Apex Class Name</label>
             <input id="className" type="text" class="mdc-text-field__input" value="WrapperClass">
             <div class="mdc-notched-outline">
@@ -218,6 +184,10 @@
         </div>
         <div class="text-area-container">
             <label class="mdc-typography--subtitle1">JSON Input</label>
+            <button class="mdc-button mdc-button--outlined" onclick="document.getElementById('jsonFileUpload').click();">
+                <span class="mdc-button__label">Upload JSON File</span>
+            </button>
+            <input type="file" id="jsonFileUpload" accept=".json" style="display: none;">
             <div class="mdc-text-field mdc-text-field--textarea">
                 <textarea id="jsonInput" class="mdc-text-field__input" rows="15" placeholder='{"name": "John", "age": 30, "isActive": true, "details": {"city": "New York", "zip": 10001}, "hobbies": ["reading", "gaming"], "contacts": [{"name": "Alice", "phone": "123-456-7890"}]}'></textarea>
             </div>
@@ -269,36 +239,37 @@
         document.querySelectorAll('.mdc-button').forEach((button) => {
             mdc.ripple.MDCRipple.attachTo(button);
         });
-        const darkModeSwitch = mdc.switchControl.MDCSwitch.attachTo(document.getElementById('darkModeSwitch'));
 
-        // Dark Mode Toggle
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        darkModeToggle.addEventListener('change', () => {
-            const isDarkMode = darkModeToggle.checked;
-            document.body.classList.toggle('dark-mode', isDarkMode);
-            localStorage.setItem('darkMode', isDarkMode);
-            // Update Prism theme
-            const prismTheme = document.getElementById('prism-theme');
-            prismTheme.href = isDarkMode
-                ? 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css'
-                : 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css';
-            Prism.highlightAll();
+        // File Upload Handler
+        document.getElementById('jsonFileUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    try {
+                        JSON.parse(content); // Validate JSON
+                        document.getElementById('jsonInput').value = content;
+                    } catch (err) {
+                        alert('Invalid JSON file: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
         });
-
-        // Load dark mode preference
-        const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-        darkModeToggle.checked = savedDarkMode;
-        document.body.classList.toggle('dark-mode', savedDarkMode);
-        const prismTheme = document.getElementById('prism-theme');
-        prismTheme.href = savedDarkMode
-            ? 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css'
-            : 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css';
-        Prism.highlightAll();
 
         // Copy to Clipboard
         function copyToClipboard(button, elementId) {
             const codeElement = document.querySelector(`#${elementId} code`);
-            const text = codeElement.textContent; // Only copy code content, excluding line numbers
+            if (!codeElement) {
+                console.error('Code element not found for ' + elementId);
+                return;
+            }
+            const text = codeElement.innerText.trim(); // Use innerText to get visible text, trim to remove extra spaces
+            if (!text) {
+                alert('No content to copy!');
+                return;
+            }
             navigator.clipboard.writeText(text).then(() => {
                 // Apply feedback styling
                 button.classList.add('copied-feedback');
@@ -310,7 +281,7 @@
                 }, 1000);
             }).catch(err => {
                 console.error('Failed to copy: ', err);
-                alert('Failed to copy to clipboard!');
+                alert('Failed to copy to clipboard! Please try again.');
             });
         }
 
