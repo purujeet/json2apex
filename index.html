@@ -1,0 +1,371 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to Apex Wrapper Generator</title>
+    <!-- Material Design Components CSS -->
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .container {
+            background-color: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            max-width: 1200px;
+            width: 100%;
+            margin: 16px;
+        }
+        .dark-mode .container {
+            background-color: #1e1e1e;
+            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #6200ee;
+            font-family: 'Roboto', sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #6200ee, #bb86fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .dark-mode .logo {
+            background: linear-gradient(45deg, #bb86fc, #03dac6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .mdc-text-field {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .mdc-text-field--textarea .mdc-text-field__input {
+            border-radius: 12px;
+        }
+        .flex-container {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .flex-container > div {
+            flex: 1;
+        }
+        .mdc-button, .mdc-switch {
+            margin-right: 8px;
+            margin-bottom: 16px;
+        }
+        .output-pre {
+            background-color: #212121;
+            color: white;
+            padding: 16px;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow: auto;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .dark-mode .output-pre {
+            background-color: #2c2c2c;
+        }
+        .error-message {
+            color: #d32f2f;
+            margin-bottom: 16px;
+        }
+        .dark-mode .error-message {
+            color: #ff867c;
+        }
+        .toggle-container {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="toggle-container">
+        <div class="mdc-switch">
+            <div class="mdc-switch__track"></div>
+            <div class="mdc-switch__thumb-underlay">
+                <div class="mdc-switch__thumb"></div>
+                <input type="checkbox" id="darkModeSwitch" class="mdc-switch__native-control" role="switch" onchange="toggleDarkMode()">
+            </div>
+        </div>
+        <label for="darkModeSwitch">Dark Mode</label>
+    </div>
+    <div class="container">
+        <div class="header">
+            <div class="logo">JSON2Apex</div>
+        </div>
+        <div class="mdc-text-field mdc-text-field--outlined">
+            <label class="mdc-floating-label" for="className">Apex Class Name</label>
+            <input id="className" type="text" class="mdc-text-field__input" value="WrapperClass">
+            <div class="mdc-notched-outline">
+                <div class="mdc-notched-outline__leading"></div>
+                <div class="mdc-notched-outline__notch"></div>
+                <div class="mdc-notched-outline__trailing"></div>
+            </div>
+        </div>
+        <div class="flex-container">
+            <div>
+                <label class="mdc-typography--subtitle1">JSON Input</label>
+                <div class="mdc-text-field mdc-text-field--textarea">
+                    <textarea id="jsonInput" class="mdc-text-field__input" rows="15" placeholder='{"name": "John", "age": 30, "isActive": true}'></textarea>
+                </div>
+            </div>
+            <div>
+                <label class="mdc-typography--subtitle1">Generated Apex Class</label>
+                <pre id="apexOutput" class="output-pre"></pre>
+                <button class="mdc-button mdc-button--outlined" onclick="copyToClipboard('apexOutput')">
+                    <span class="mdc-button__label">Copy Apex</span>
+                </button>
+            </div>
+            <div>
+                <label class="mdc-typography--subtitle1">Generated Test Class</label>
+                <pre id="testOutput" class="output-pre"></pre>
+                <button class="mdc-button mdc-button--outlined" onclick="copyToClipboard('testOutput')">
+                    <span class="mdc-button__label">Copy Test</span>
+                </button>
+            </div>
+        </div>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <button class="mdc-button mdc-button--raised" onclick="generateApexClass()">
+            <span class="mdc-button__label">Generate Apex & Test Class</span>
+        </button>
+        <button class="mdc-button mdc-button--outlined" onclick="clearInput()">
+            <span class="mdc-button__label">Clear Input</span>
+        </button>
+        <button class="mdc-button mdc-button--outlined" onclick="downloadClasses()">
+            <span class="mdc-button__label">Download Classes</span>
+        </button>
+    </div>
+
+    <!-- Material Design Components JS -->
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <!-- JSZip for creating ZIP file -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        // Initialize Material Design Components
+        document.querySelectorAll('.mdc-text-field').forEach((textField) => {
+            mdc.textField.MDCTextField.attachTo(textField);
+        });
+        document.querySelectorAll('.mdc-button').forEach((button) => {
+            mdc.ripple.MDCRipple.attachTo(button);
+        });
+        const switchControl = document.querySelector('.mdc-switch');
+        if (switchControl) {
+            mdc.switchControl.MDCSwitch.attachTo(switchControl);
+        }
+
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            document.getElementById('darkModeSwitch').checked = document.body.classList.contains('dark-mode');
+        }
+
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkModeSwitch').checked = true;
+        }
+
+        // Persist placeholder until user types
+        const jsonInput = document.getElementById('jsonInput');
+        const defaultPlaceholder = '{"name": "John", "age": 30, "isActive": true}';
+        jsonInput.addEventListener('input', function() {
+            if (jsonInput.value.trim() === '') {
+                jsonInput.placeholder = defaultPlaceholder;
+            }
+        });
+
+        // Copy to Clipboard
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        // Clear Input
+        function clearInput() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('jsonInput').placeholder = defaultPlaceholder;
+            document.getElementById('className').value = 'WrapperClass';
+            document.getElementById('apexOutput').textContent = '';
+            document.getElementById('testOutput').textContent = '';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Download Classes
+        function downloadClasses() {
+            const className = document.getElementById('className').value.trim() || 'WrapperClass';
+            const apexContent = document.getElementById('apexOutput').textContent;
+            const testContent = document.getElementById('testOutput').textContent;
+
+            if (!apexContent || !testContent) {
+                alert('Please generate the classes first!');
+                return;
+            }
+
+            const zip = new JSZip();
+            zip.file(`${className}.cls`, apexContent);
+            zip.file(`${className}Test.cls`, testContent);
+
+            zip.generateAsync({ type: 'blob' }).then(content => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `${className}_Classes.zip`;
+                link.click();
+            });
+        }
+
+        function generateApexClass() {
+            const jsonInput = document.getElementById('jsonInput').value || defaultPlaceholder;
+            const className = document.getElementById('className').value.trim() || 'WrapperClass';
+            const errorMessage = document.getElementById('errorMessage');
+            const apexOutput = document.getElementById('apexOutput');
+            const testOutput = document.getElementById('testOutput');
+
+            // Reset error and output
+            errorMessage.style.display = 'none';
+            errorMessage.textContent = '';
+            apexOutput.textContent = '';
+            testOutput.textContent = '';
+
+            try {
+                // Parse JSON
+                const jsonObj = JSON.parse(jsonInput);
+
+                // Generate Apex class
+                let apexClass = `public class ${className} {\n`;
+                const properties = [];
+
+                // Function to map JSON types to Apex types
+                function getApexType(value) {
+                    if (value === null) return 'Object';
+                    if (typeof value === 'string') return 'String';
+                    if (typeof value === 'number') {
+                        return Number.isInteger(value) ? 'Integer' : 'Decimal';
+                    }
+                    if (typeof value === 'boolean') return 'Boolean';
+                    if (Array.isArray(value)) {
+                        if (value.length === 0) return 'List<Object>';
+                        const firstNonNull = value.find(v => v !== null);
+                        return `List<${getApexType(firstNonNull)}>`;
+                    }
+                    if (typeof value === 'object') {
+                        const nestedClassName = `Inner${Object.keys(value).join('')}`;
+                        apexClass += generateNestedClass(nestedClassName, value);
+                        return nestedClassName;
+                    }
+                    return 'Object';
+                }
+
+                // Function to generate nested classes
+                function generateNestedClass(nestedClassName, obj) {
+                    let nestedClass = `\n    public class ${nestedClassName} {\n`;
+                    const nestedProperties = [];
+                    for (const [key, val] of Object.entries(obj)) {
+                        const apexType = getApexType(val);
+                        nestedProperties.push(`        public ${apexType} ${key};`);
+                    }
+                    nestedClass += nestedProperties.join('\n') + '\n    }\n';
+                    return nestedClass;
+                }
+
+                // Generate properties for the main class
+                for (const [key, value] of Object.entries(jsonObj)) {
+                    const apexType = getApexType(value);
+                    properties.push(`    public ${apexType} ${key};`);
+                }
+
+                apexClass += properties.join('\n') + '\n}';
+
+                // Generate Test Class
+                let testClass = `@isTest\nprivate class ${className}Test {\n`;
+                testClass += `    @isTest\n    static void test${className}() {\n`;
+                testClass += `        // Test JSON string\n`;
+                testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'")}';\n`;
+                testClass += `        // Deserialize JSON to ${className}\n`;
+                testClass += `        ${className} wrapper = (${className}) JSON.deserialize(jsonString, ${className}.class);\n`;
+                testClass += `        // Verify properties\n`;
+                for (const [key, value] of Object.entries(jsonObj)) {
+                    if (typeof value !== 'object' && !Array.isArray(value)) {
+                        testClass += `        System.assertEquals(${JSON.stringify(value)}, wrapper.${key}, 'Value for ${key} should match');\n`;
+                    }
+                }
+                testClass += `    }\n}\n`;
+
+                // Display the generated classes
+                apexOutput.textContent = apexClass;
+                testOutput.textContent = testClass;
+            } catch (e) {
+                errorMessage.textContent = 'Invalid JSON: ' + e.message;
+                errorMessage.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
