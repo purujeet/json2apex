@@ -100,6 +100,7 @@
         .error-message {
             color: #d32f2f;
             margin-bottom: 16px;
+            display: none;
         }
         .copy-button {
             position: absolute;
@@ -157,6 +158,25 @@
         .class-name-field {
             margin-bottom: 24px; /* Add space on bottom of class name */
         }
+        .class-name-label {
+            display: block;
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .class-name-input {
+            width: 100%;
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid #6200ee;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .class-name-input:focus {
+            outline: none;
+            border-color: #6200ee;
+            box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -173,14 +193,9 @@
                 <li>Type it manually</li>
             </ul>
         </div>
-        <div class="mdc-text-field mdc-text-field--outlined class-name-field">
-            <label class="mdc-floating-label" for="className">Apex Class Name</label>
-            <input id="className" type="text" class="mdc-text-field__input" value="WrapperClass">
-            <div class="mdc-notched-outline">
-                <div class="mdc-notched-outline__leading"></div>
-                <div class="mdc-notched-outline__notch"></div>
-                <div class="mdc-notched-outline__trailing"></div>
-            </div>
+        <div class="class-name-field">
+            <label class="class-name-label" for="className">Apex Class Name</label>
+            <input id="className" type="text" class="class-name-input" value="WrapperClass">
         </div>
         <div class="text-area-container">
             <label class="mdc-typography--subtitle1">JSON Input</label>
@@ -189,7 +204,7 @@
             </button>
             <input type="file" id="jsonFileUpload" accept=".json" style="display: none;">
             <div class="mdc-text-field mdc-text-field--textarea">
-                <textarea id="jsonInput" class="mdc-text-field__input" rows="15" placeholder='{"name": "John", "age": 30, "isActive": true, "details": {"city": "New York", "zip": 10001}, "hobbies": ["reading", "gaming"], "contacts": [{"name": "Alice", "phone": "123-456-7890"}]}'></textarea>
+                <textarea id="jsonInput" class="mdc-text-field__input" rows="15">{"name": "John", "age": 30, "isActive": true, "details": {"city": "New York", "zip": 10001}, "hobbies": ["reading", "gaming"], "contacts": [{"name": "Alice", "phone": "123-456-7890"}]}</textarea>
             </div>
         </div>
         <div class="button-container">
@@ -221,7 +236,7 @@
                 </button>
             </pre>
         </div>
-        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="errorMessage" class="error-message"></div>
     </div>
 
     <!-- Material Design Components JS -->
@@ -240,6 +255,17 @@
             mdc.ripple.MDCRipple.attachTo(button);
         });
 
+        // Function to show error message temporarily
+        function showErrorMessage(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+                errorMessage.textContent = '';
+            }, 3000);
+        }
+
         // File Upload Handler
         document.getElementById('jsonFileUpload').addEventListener('change', function(event) {
             const file = event.target.files[0];
@@ -249,10 +275,13 @@
                     const content = e.target.result;
                     try {
                         JSON.parse(content); // Validate JSON
-                        document.getElementById('jsonInput').value = content;
+                        document.getElementById('jsonInput').value = content; // Replace textarea content
+                        document.getElementById('errorMessage').style.display = 'none';
                     } catch (err) {
-                        alert('Invalid JSON file: ' + err.message);
+                        showErrorMessage('Invalid JSON file: ' + err.message);
                     }
+                    // Reset file input to allow re-uploading the same file
+                    document.getElementById('jsonFileUpload').value = '';
                 };
                 reader.readAsText(file);
             }
@@ -263,11 +292,12 @@
             const codeElement = document.querySelector(`#${elementId} code`);
             if (!codeElement) {
                 console.error('Code element not found for ' + elementId);
+                showErrorMessage('Code element not found for ' + elementId);
                 return;
             }
             const text = codeElement.innerText.trim(); // Use innerText to get visible text, trim to remove extra spaces
             if (!text) {
-                alert('No content to copy!');
+                showErrorMessage('No content to copy!');
                 return;
             }
             navigator.clipboard.writeText(text).then(() => {
@@ -281,7 +311,7 @@
                 }, 1000);
             }).catch(err => {
                 console.error('Failed to copy: ', err);
-                alert('Failed to copy to clipboard! Please try again.');
+                showErrorMessage('Failed to copy to clipboard! Please try again.');
             });
         }
 
@@ -306,7 +336,7 @@
             const testContent = document.querySelector('#testOutput code').textContent;
 
             if (!apexContent || !testContent) {
-                alert('Please generate the classes first!');
+                showErrorMessage('Please generate the classes first!');
                 return;
             }
 
@@ -434,8 +464,7 @@
                 testOutput.textContent = testClass;
                 Prism.highlightAll();
             } catch (e) {
-                errorMessage.textContent = 'Invalid JSON: ' + e.message;
-                errorMessage.style.display = 'block';
+                showErrorMessage('Invalid JSON: ' + e.message);
             }
         }
     </script>
