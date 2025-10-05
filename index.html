@@ -1,52 +1,22 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON to Apex Wrapper Generator</title>
+    <title>json2apex - the best JSON 2 apex tool</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="json2apex is the best tool to convert JSON to Apex classes for Salesforce, including test classes. Fast, reliable, and user-friendly.">
+    <meta name="keywords" content="json2apex, JSON to Apex, Salesforce Apex, Apex class generator, JSON parser, Salesforce development, Apex test class">
+    <meta name="author" content="json2apex Team">
+    <meta name="robots" content="index, follow">
     <!-- Material Design Components CSS -->
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Prism.js CSS for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" id="prism-theme">
+    <!-- Prism.js Line Numbers CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #f5f5f5;
@@ -61,6 +31,9 @@
         body.dark-mode {
             background-color: #121212;
             color: #ffffff;
+        }
+        body.dark-mode #prism-theme {
+            content: url('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css');
         }
         .container {
             background-color: white;
@@ -77,55 +50,73 @@
         }
         .header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
         }
-        .logo {
-            font-size: 2rem;
+        .banner {
+            font-size: 2.5rem;
             font-weight: bold;
             color: #6200ee;
             font-family: 'Roboto', sans-serif;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            background: linear-gradient(45deg, #6200ee, #bb86fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            text-align: left;
         }
-        .dark-mode .logo {
-            background: linear-gradient(45deg, #bb86fc, #03dac6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .dark-mode .banner {
+            color: #bb86fc;
         }
         .mdc-text-field {
             width: 100%;
             margin-bottom: 16px;
         }
+        .mdc-text-field--outlined {
+            padding-top: 8px; /* Prevent label overlap */
+        }
+        .mdc-text-field--outlined .mdc-floating-label {
+            top: 18px; /* Adjust label position */
+            transform: translateY(-50%) scale(1);
+        }
+        .mdc-text-field--outlined.mdc-text-field--focused .mdc-floating-label,
+        .mdc-text-field--outlined .mdc-text-field__input:not(:placeholder-shown) + .mdc-floating-label {
+            transform: translateY(-100%) scale(0.75);
+            top: 0;
+        }
         .mdc-text-field--textarea .mdc-text-field__input {
-            border-radius: 12px;
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid #6200ee;
         }
-        .flex-container {
-            display: flex;
-            gap: 16px;
+        .dark-mode .mdc-text-field--textarea .mdc-text-field__input {
+            border: 1px solid #bb86fc;
+        }
+        .mdc-text-field--outlined .mdc-text-field__input {
+            border-radius: 20px;
+            padding: 16px;
+        }
+        .text-area-container {
+            margin-bottom: 16px;
+            position: relative; /* For positioning copy buttons */
+        }
+        .button-container {
             margin-bottom: 16px;
         }
-        .flex-container > div {
-            flex: 1;
-        }
-        .mdc-button, .mdc-switch {
+        .mdc-button {
             margin-right: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
         .output-pre {
             background-color: #212121;
             color: white;
             padding: 16px;
-            border-radius: 4px;
+            border-radius: 20px;
+            border: 1px solid #6200ee;
             max-height: 400px;
             overflow: auto;
             font-family: 'Roboto Mono', monospace;
+            position: relative; /* For positioning copy button */
         }
         .dark-mode .output-pre {
             background-color: #2c2c2c;
+            border: 1px solid #bb86fc;
         }
         .error-message {
             color: #d32f2f;
@@ -135,26 +126,86 @@
             color: #ff867c;
         }
         .toggle-container {
-            position: fixed;
-            top: 16px;
-            right: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .toggle-label {
+            margin-left: 8px;
+            font-size: 1rem;
+        }
+        .copy-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 8px;
+            background-color: #6200ee;
+            color: #ffffff !important; /* Ensure text is white */
+            z-index: 2; /* Above Prism.js content and line numbers */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .dark-mode .copy-button {
+            background-color: #bb86fc;
+            color: #ffffff !important;
+        }
+        .copy-button.copied-feedback {
+            background-color: #4caf50 !important; /* Green flash for feedback */
+        }
+        .copy-button .mdc-button__label {
+            font-size: 14px;
+            color: #ffffff !important; /* Explicitly set text color */
+        }
+        .copy-tooltip {
+            position: absolute;
+            top: 36px; /* Below the button */
+            right: 8px;
+            background-color: #333;
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 3;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+        .dark-mode .copy-tooltip {
+            background-color: #555;
+        }
+        /* Ensure Prism.js doesn't override copy button positioning */
+        .output-pre code {
+            display: block;
+            padding: 0;
+            background: none;
+            border: none;
+        }
+        /* Line numbers styling */
+        .line-numbers .line-numbers-rows {
+            border-right: 1px solid #6200ee;
+        }
+        .dark-mode .line-numbers .line-numbers-rows {
+            border-right: 1px solid #bb86fc;
         }
     </style>
 </head>
 <body>
-    <div class="toggle-container">
-        <div class="mdc-switch">
-            <div class="mdc-switch__track"></div>
-            <div class="mdc-switch__thumb-underlay">
-                <div class="mdc-switch__thumb"></div>
-                <input type="checkbox" id="darkModeSwitch" class="mdc-switch__native-control" role="switch" onchange="toggleDarkMode()">
-            </div>
-        </div>
-        <label for="darkModeSwitch">Dark Mode</label>
-    </div>
     <div class="container">
         <div class="header">
-            <div class="logo">JSON2Apex</div>
+            <div class="banner">JSON2Apex</div>
+            <div class="toggle-container">
+                <div class="mdc-switch" id="darkModeSwitch">
+                    <div class="mdc-switch__track"></div>
+                    <div class="mdc-switch__thumb-underlay">
+                        <div class="mdc-switch__thumb">
+                            <input type="checkbox" id="darkModeToggle" class="mdc-switch__native-control" role="switch">
+                        </div>
+                    </div>
+                </div>
+                <label for="darkModeToggle" class="toggle-label">Dark Mode</label>
+            </div>
         </div>
         <div class="mdc-text-field mdc-text-field--outlined">
             <label class="mdc-floating-label" for="className">Apex Class Name</label>
@@ -165,44 +216,51 @@
                 <div class="mdc-notched-outline__trailing"></div>
             </div>
         </div>
-        <div class="flex-container">
-            <div>
-                <label class="mdc-typography--subtitle1">JSON Input</label>
-                <div class="mdc-text-field mdc-text-field--textarea">
-                    <textarea id="jsonInput" class="mdc-text-field__input" rows="15" placeholder='{"name": "John", "age": 30, "isActive": true}'></textarea>
-                </div>
-            </div>
-            <div>
-                <label class="mdc-typography--subtitle1">Generated Apex Class</label>
-                <pre id="apexOutput" class="output-pre"></pre>
-                <button class="mdc-button mdc-button--outlined" onclick="copyToClipboard('apexOutput')">
-                    <span class="mdc-button__label">Copy Apex</span>
-                </button>
-            </div>
-            <div>
-                <label class="mdc-typography--subtitle1">Generated Test Class</label>
-                <pre id="testOutput" class="output-pre"></pre>
-                <button class="mdc-button mdc-button--outlined" onclick="copyToClipboard('testOutput')">
-                    <span class="mdc-button__label">Copy Test</span>
-                </button>
+        <div class="text-area-container">
+            <label class="mdc-typography--subtitle1">JSON Input</label>
+            <div class="mdc-text-field mdc-text-field--textarea">
+                <textarea id="jsonInput" class="mdc-text-field__input" rows="15" placeholder='{"name": "John", "age": 30, "isActive": true, "details": {"city": "New York", "zip": 10001}, "hobbies": ["reading", "gaming"], "contacts": [{"name": "Alice", "phone": "123-456-7890"}]}'></textarea>
             </div>
         </div>
+        <div class="button-container">
+            <button class="mdc-button mdc-button--raised" onclick="generateApexClass()">
+                <span class="mdc-button__label">Generate Class</span>
+            </button>
+            <button class="mdc-button mdc-button--outlined" onclick="clearInput()">
+                <span class="mdc-button__label">Clear Input</span>
+            </button>
+            <button class="mdc-button mdc-button--outlined" onclick="downloadClasses()">
+                <span class="mdc-button__label">Download Classes</span>
+            </button>
+        </div>
+        <div class="text-area-container">
+            <label class="mdc-typography--subtitle1">Generated Apex Class</label>
+            <pre id="apexOutput" class="output-pre language-apex line-numbers"><code class="language-apex"></code>
+                <button class="mdc-button copy-button" onclick="copyToClipboard(this, 'apexOutput')">
+                    <span class="mdc-button__label">Copy</span>
+                    <span class="copy-tooltip">Copied!</span>
+                </button>
+            </pre>
+        </div>
+        <div class="text-area-container">
+            <label class="mdc-typography--subtitle1">Generated Test Class</label>
+            <pre id="testOutput" class="output-pre language-apex line-numbers"><code class="language-apex"></code>
+                <button class="mdc-button copy-button" onclick="copyToClipboard(this, 'testOutput')">
+                    <span class="mdc-button__label">Copy</span>
+                    <span class="copy-tooltip">Copied!</span>
+                </button>
+            </pre>
+        </div>
         <div id="errorMessage" class="error-message" style="display: none;"></div>
-        <button class="mdc-button mdc-button--raised" onclick="generateApexClass()">
-            <span class="mdc-button__label">Generate Apex & Test Class</span>
-        </button>
-        <button class="mdc-button mdc-button--outlined" onclick="clearInput()">
-            <span class="mdc-button__label">Clear Input</span>
-        </button>
-        <button class="mdc-button mdc-button--outlined" onclick="downloadClasses()">
-            <span class="mdc-button__label">Download Classes</span>
-        </button>
     </div>
 
     <!-- Material Design Components JS -->
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-    <!-- JSZip for creating ZIP file -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-apex.min.js"></script>
+    <!-- Prism.js Line Numbers Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
     <script>
         // Initialize Material Design Components
         document.querySelectorAll('.mdc-text-field').forEach((textField) => {
@@ -211,58 +269,70 @@
         document.querySelectorAll('.mdc-button').forEach((button) => {
             mdc.ripple.MDCRipple.attachTo(button);
         });
-        const switchControl = document.querySelector('.mdc-switch');
-        if (switchControl) {
-            mdc.switchControl.MDCSwitch.attachTo(switchControl);
-        }
+        const darkModeSwitch = mdc.switchControl.MDCSwitch.attachTo(document.getElementById('darkModeSwitch'));
 
         // Dark Mode Toggle
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-            document.getElementById('darkModeSwitch').checked = document.body.classList.contains('dark-mode');
-        }
-
-        // Load dark mode preference
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-            document.getElementById('darkModeSwitch').checked = true;
-        }
-
-        // Persist placeholder until user types
-        const jsonInput = document.getElementById('jsonInput');
-        const defaultPlaceholder = '{"name": "John", "age": 30, "isActive": true}';
-        jsonInput.addEventListener('input', function() {
-            if (jsonInput.value.trim() === '') {
-                jsonInput.placeholder = defaultPlaceholder;
-            }
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        darkModeToggle.addEventListener('change', () => {
+            const isDarkMode = darkModeToggle.checked;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            localStorage.setItem('darkMode', isDarkMode);
+            // Update Prism theme
+            const prismTheme = document.getElementById('prism-theme');
+            prismTheme.href = isDarkMode
+                ? 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css'
+                : 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css';
+            Prism.highlightAll();
         });
 
+        // Load dark mode preference
+        const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+        darkModeToggle.checked = savedDarkMode;
+        document.body.classList.toggle('dark-mode', savedDarkMode);
+        const prismTheme = document.getElementById('prism-theme');
+        prismTheme.href = savedDarkMode
+            ? 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css'
+            : 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css';
+        Prism.highlightAll();
+
         // Copy to Clipboard
-        function copyToClipboard(elementId) {
-            const text = document.getElementById(elementId).textContent;
+        function copyToClipboard(button, elementId) {
+            const codeElement = document.querySelector(`#${elementId} code`);
+            const text = codeElement.textContent; // Only copy code content, excluding line numbers
             navigator.clipboard.writeText(text).then(() => {
-                alert('Copied to clipboard!');
+                // Apply feedback styling
+                button.classList.add('copied-feedback');
+                const tooltip = button.querySelector('.copy-tooltip');
+                tooltip.classList.add('show');
+                setTimeout(() => {
+                    button.classList.remove('copied-feedback');
+                    tooltip.classList.remove('show');
+                }, 1000);
             }).catch(err => {
                 console.error('Failed to copy: ', err);
+                alert('Failed to copy to clipboard!');
             });
         }
 
         // Clear Input
         function clearInput() {
             document.getElementById('jsonInput').value = '';
-            document.getElementById('jsonInput').placeholder = defaultPlaceholder;
             document.getElementById('className').value = 'WrapperClass';
-            document.getElementById('apexOutput').textContent = '';
-            document.getElementById('testOutput').textContent = '';
+            document.querySelector('#apexOutput code').textContent = '';
+            document.querySelector('#testOutput code').textContent = '';
             document.getElementById('errorMessage').style.display = 'none';
+            document.querySelectorAll('.copy-button').forEach(button => {
+                button.classList.remove('copied-feedback');
+                button.querySelector('.copy-tooltip').classList.remove('show');
+            });
+            Prism.highlightAll();
         }
 
         // Download Classes
         function downloadClasses() {
             const className = document.getElementById('className').value.trim() || 'WrapperClass';
-            const apexContent = document.getElementById('apexOutput').textContent;
-            const testContent = document.getElementById('testOutput').textContent;
+            const apexContent = document.querySelector('#apexOutput code').textContent;
+            const testContent = document.querySelector('#testOutput code').textContent;
 
             if (!apexContent || !testContent) {
                 alert('Please generate the classes first!');
@@ -276,23 +346,27 @@
             zip.generateAsync({ type: 'blob' }).then(content => {
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(content);
-                link.download = `${className}_Classes.zip`;
+                link.download = 'json2apex.zip';
                 link.click();
             });
         }
 
         function generateApexClass() {
-            const jsonInput = document.getElementById('jsonInput').value || defaultPlaceholder;
+            const jsonInput = document.getElementById('jsonInput').value;
             const className = document.getElementById('className').value.trim() || 'WrapperClass';
             const errorMessage = document.getElementById('errorMessage');
-            const apexOutput = document.getElementById('apexOutput');
-            const testOutput = document.getElementById('testOutput');
+            const apexOutput = document.querySelector('#apexOutput code');
+            const testOutput = document.querySelector('#testOutput code');
 
             // Reset error and output
             errorMessage.style.display = 'none';
             errorMessage.textContent = '';
             apexOutput.textContent = '';
             testOutput.textContent = '';
+            document.querySelectorAll('.copy-button').forEach(button => {
+                button.classList.remove('copied-feedback');
+                button.querySelector('.copy-tooltip').classList.remove('show');
+            });
 
             try {
                 // Parse JSON
@@ -301,9 +375,15 @@
                 // Generate Apex class
                 let apexClass = `public class ${className} {\n`;
                 const properties = [];
+                const nestedClasses = [];
+
+                // Function to sanitize variable names
+                function sanitizeName(name) {
+                    return name.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^(\d)/, '_$1');
+                }
 
                 // Function to map JSON types to Apex types
-                function getApexType(value) {
+                function getApexType(value, parentKey = '') {
                     if (value === null) return 'Object';
                     if (typeof value === 'string') return 'String';
                     if (typeof value === 'number') {
@@ -312,12 +392,14 @@
                     if (typeof value === 'boolean') return 'Boolean';
                     if (Array.isArray(value)) {
                         if (value.length === 0) return 'List<Object>';
-                        const firstNonNull = value.find(v => v !== null);
-                        return `List<${getApexType(firstNonNull)}>`;
+                        const firstNonNull = value.find(v => v !== null) || value[0];
+                        if (firstNonNull === undefined) return 'List<Object>';
+                        const elementType = getApexType(firstNonNull, parentKey);
+                        return `List<${elementType}>`;
                     }
                     if (typeof value === 'object') {
-                        const nestedClassName = `Inner${Object.keys(value).join('')}`;
-                        apexClass += generateNestedClass(nestedClassName, value);
+                        const nestedClassName = `Inner${sanitizeName(parentKey)}${nestedClasses.length}`;
+                        nestedClasses.push(generateNestedClass(nestedClassName, value));
                         return nestedClassName;
                     }
                     return 'Object';
@@ -328,44 +410,65 @@
                     let nestedClass = `\n    public class ${nestedClassName} {\n`;
                     const nestedProperties = [];
                     for (const [key, val] of Object.entries(obj)) {
-                        const apexType = getApexType(val);
-                        nestedProperties.push(`        public ${apexType} ${key};`);
+                        const apexType = getApexType(val, key);
+                        nestedProperties.push(`        public ${apexType} ${sanitizeName(key)};`);
                     }
-                    nestedClass += nestedProperties.join('\n') + '\n    }\n';
+                    nestedClass += nestedProperties.join('\n') + '\n';
+                    nestedClass += `        public static ${nestedClassName} parse(String json) {\n`;
+                    nestedClass += `            return (${nestedClassName}) System.JSON.deserialize(json, ${nestedClassName}.class);\n`;
+                    nestedClass += `        }\n`;
+                    nestedClass += '    }\n';
                     return nestedClass;
                 }
 
                 // Generate properties for the main class
                 for (const [key, value] of Object.entries(jsonObj)) {
-                    const apexType = getApexType(value);
-                    properties.push(`    public ${apexType} ${key};`);
+                    const apexType = getApexType(value, key);
+                    properties.push(`    public ${apexType} ${sanitizeName(key)};`);
                 }
 
-                apexClass += properties.join('\n') + '\n}';
+                apexClass += properties.join('\n') + '\n';
+                apexClass += nestedClasses.join('');
+                apexClass += `    public static ${className} parse(String json) {\n`;
+                apexClass += `        return (${className}) System.JSON.deserialize(json, ${className}.class);\n`;
+                apexClass += `    }\n`;
+                apexClass += '}';
 
                 // Generate Test Class
                 let testClass = `@isTest\nprivate class ${className}Test {\n`;
                 testClass += `    @isTest\n    static void test${className}() {\n`;
-                testClass += `        // Test JSON string\n`;
                 testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'")}';\n`;
-                testClass += `        // Deserialize JSON to ${className}\n`;
-                testClass += `        ${className} wrapper = (${className}) JSON.deserialize(jsonString, ${className}.class);\n`;
-                testClass += `        // Verify properties\n`;
+                testClass += `        ${className} wrapper = ${className}.parse(jsonString);\n`;
+                testClass += `        System.assertNotEquals(null, wrapper, 'Parsed wrapper should not be null');\n`;
                 for (const [key, value] of Object.entries(jsonObj)) {
-                    if (typeof value !== 'object' && !Array.isArray(value)) {
-                        testClass += `        System.assertEquals(${JSON.stringify(value)}, wrapper.${key}, 'Value for ${key} should match');\n`;
+                    const sanitizedKey = sanitizeName(key);
+                    if (typeof value !== 'object' && !Array.isArray(value) && value !== null) {
+                        testClass += `        System.assertEquals(${JSON.stringify(value)}, wrapper.${sanitizedKey}, 'Value for ${sanitizedKey} should match');\n`;
+                    } else if (Array.isArray(value)) {
+                        testClass += `        System.assertEquals(${value.length}, wrapper.${sanitizedKey} != null ? wrapper.${sanitizedKey}.size() : 0, 'List size for ${sanitizedKey} should match');\n`;
+                    } else if (typeof value === 'object' && value !== null) {
+                        testClass += `        System.assertNotEquals(null, wrapper.${sanitizedKey}, '${sanitizedKey} should not be null');\n`;
                     }
                 }
-                testClass += `    }\n}\n`;
+                testClass += `    }\n`;
+                testClass += `    @isTest\n    static void testParse() {\n`;
+                testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'")}';\n`;
+                testClass += `        ${className} wrapper = ${className}.parse(jsonString);\n`;
+                testClass += `        System.assertNotEquals(null, wrapper, 'Parsed wrapper should not be null');\n`;
+                testClass += `    }\n`;
+                testClass += '}\n';
 
                 // Display the generated classes
                 apexOutput.textContent = apexClass;
                 testOutput.textContent = testClass;
+                Prism.highlightAll();
             } catch (e) {
                 errorMessage.textContent = 'Invalid JSON: ' + e.message;
                 errorMessage.style.display = 'block';
             }
         }
     </script>
+    <!-- JSZip for creating ZIP file -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
 </html>
