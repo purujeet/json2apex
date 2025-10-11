@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>json2apex - The Best JSON to Apex Tool</title>
-    <meta name="description" content="json2apex is the best tool to convert JSON to Apex classes for Salesforce, including test classes. Fast, reliable, and user-friendly.">
+    <title>JSON to Apex Converter: Generate Classes & Tests Free</title>
+    <meta name="description" content="Instantly convert JSON to Apex classes for Salesforce with json2apex. Generate reliable code including test classes. Free, fast, and user-friendly—simplify your development today!">
     <meta name="keywords" content="json2apex, JSON to Apex, Salesforce Apex, Apex class generator, JSON parser, Salesforce development, Apex test class">
     <meta name="author" content="json2apex Team">
     <meta name="robots" content="index, follow">
@@ -341,7 +341,79 @@
         footer a:hover {
             text-decoration: underline;
         }
+
+        /* New styles for engaging content */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .hero-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+
+        .hero-section p {
+            font-size: 1.2rem;
+            margin-bottom: 0;
+        }
+
+        .how-to-use {
+            margin-bottom: 32px;
+        }
+
+        .how-to-use h2 {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+        }
+
+        .how-to-use ol {
+            padding-left: 20px;
+        }
+
+        .how-to-use li {
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .features-list {
+            margin-bottom: 32px;
+        }
+
+        .features-list h2 {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+        }
+
+        .features-list ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+
+        .features-list li {
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
     </style>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "json2apex",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "Free online tool to convert JSON to Apex classes for Salesforce, including test classes.",
+      "url": "https://www.json2apex.com"
+    }
+    </script>
 </head>
 <body>
     <nav>
@@ -361,6 +433,33 @@
     </nav>
 
     <div class="container">
+        <div class="hero-section">
+            <h1>Instant JSON to Apex Converter for Salesforce Developers</h1>
+            <p>Generate Apex classes and tests in seconds. Paste your JSON below!</p>
+        </div>
+
+        <div class="how-to-use">
+            <h2>How to Use json2apex</h2>
+            <ol>
+                <li>Enter your desired Apex class name (default: WrapperClass).</li>
+                <li>Check or uncheck "Include Parse Methods" as needed.</li>
+                <li>Paste your JSON input or upload a JSON file.</li>
+                <li>Click "Generate Class" to create the Apex code and test class.</li>
+                <li>Copy the output or download the classes as a ZIP file.</li>
+            </ol>
+        </div>
+
+        <div class="features-list">
+            <h2>Key Features</h2>
+            <ul>
+                <li>Supports complex JSON structures, including nested objects and arrays.</li>
+                <li>Generates complete Apex classes with optional parse methods.</li>
+                <li>Includes automated test classes for easy validation.</li>
+                <li>Dark mode toggle for comfortable viewing.</li>
+                <li>Free and fast—no sign-up required.</li>
+            </ul>
+        </div>
+
         <div class="class-name-field">
             <label class="class-name-label" for="className">Apex Class Name</label>
             <input id="className" type="text" class="class-name-input" value="WrapperClass" aria-label="Apex Class Name">
@@ -414,11 +513,11 @@
         <p>&copy; 2025 json2apex. All rights reserved. | <a href="#top">Back to Top</a></p>
     </footer>
 
-    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-apex.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-apex.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" async></script>
     <script>
         // Initialize Material Design Components
         document.querySelectorAll('.mdc-text-field').forEach((textField) => {
