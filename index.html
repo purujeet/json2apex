@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8980910491820091" crossorigin="anonymous"></script>
+    <script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8980910491820091" crossorigin="anonymous" defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON to Apex Converter: Generate Classes & Tests Free</title>
-    <meta name="description" content="Instantly convert convert a JSON string into an Apex class for Salesforce with json2apex. Generate reliable code including test classes. Free, fast, and user-friendly—simplify your development today!">
+    <meta name="description" content="Instantly convert a JSON string into an Apex class for Salesforce with json2apex. Generate reliable code including test classes. Free, fast, and user-friendly—simplify your development today!">
     <meta name="keywords" content="json2apex, JSON to Apex, Salesforce Apex, Apex class generator, JSON parser, Salesforce development, Apex test class">
     <meta name="author" content="json2apex Team">
     <meta name="robots" content="index, follow">
@@ -419,7 +419,7 @@
             overflow: auto; 
             z-index: 100; 
             box-sizing: border-box; 
-            pointer-events: none; /* Allows user to still click textarea normally */
+            pointer-events: none;
         }
     </style>
     <script type="application/ld+json">
@@ -554,17 +554,15 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
 &copy; 2025 json2apex. All rights reserved. | <a href="#top">Back to Top</a></p>
     </footer>
 
-   <!-- Use 'defer' instead of 'async' to prevent JS race conditions -->
+    <!-- Ensure scripts load with 'defer' to prevent race conditions -->
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-apex.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
-    
+
     <script>
-        // Wrap everything in DOMContentLoaded to ensure the page and libraries are fully ready
         window.addEventListener('DOMContentLoaded', () => {
-            
             // Initialize Material Design Components
             document.querySelectorAll('.mdc-text-field').forEach((textField) => {
                 mdc.textField.MDCTextField.attachTo(textField);
@@ -611,7 +609,6 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                 toast.appendChild(closeButton);
 
                 document.body.appendChild(toast);
-
                 setTimeout(() => toast.classList.add('show'), 10);
 
                 const timeoutId = setTimeout(() => {
@@ -647,8 +644,25 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
             });
 
             /* =========================================================
-               AUTO-FIX JSON LOGIC
+               AUTO-FIX JSON LOGIC (Pure function, no tests)
                ========================================================= */
+            function autoFixJSON(originalText) {
+                if (!originalText || !originalText.trim()) return originalText;
+
+                return originalText
+                    .replace(/[“”]/g, '"').replace(/[‘’]/g, "'") // Fix smart quotes
+                    .replace(/'/g, '"') // Convert single to double quotes
+                    .replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3') // Fix unquoted keys
+                    .replace(/(:\s*)([a-zA-Z0-9_.-]+)"/g, '$1"$2"') // Fix missing starting quotes
+                    .replace(/(:\s*)([a-zA-Z0-9_.-]+)(\s*[,}\]])/g, (match, p1, p2, p3) => {
+                        if (/^(true|false|null|[0-9]+(\.[0-9]+)?)$/i.test(p2)) return match;
+                        return `${p1}"${p2}"${p3}`;
+                    }) // Fix completely unquoted string values
+                    .replace(/(:\s*)(\{(?:[^{}]|(?:\{[^{}]*\}))*\})(\s*\])/g, '$1[$2$3') // Fix missing array bracket
+                    .replace(/(["\d}\]]|true|false|null)(\s+)(?=["{\[])/g, '$1,$2') // Fix missing commas
+                    .replace(/,\s*([}\]])/g, '$1'); // Fix trailing commas
+            }
+
             document.getElementById('btn-fix-json').addEventListener('click', function() {
                 const jsonTextarea = document.getElementById('jsonInput');
                 const originalText = jsonTextarea.value;
@@ -658,37 +672,19 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                     return;
                 }
 
-                // Advanced regex patterns for severe syntax fixes
-                let fixedJSONText = originalText
-                    // 1. Fix smart quotes often copied from Word/Slack
-                    .replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
-                    // 2. Convert single quotes to double quotes
-                    .replace(/'/g, '"')
-                    // 3. Fix unquoted keys (e.g., name: "John" -> "name": "John")
-                    .replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3')
-                    // 4. Fix missing starting quotes on values (e.g., : John" -> : "John")
-                    .replace(/(:\s*)([a-zA-Z0-9_.-]+)"/g, '$1"$2"')
-                    // 5. Fix completely unquoted string values (e.g., : John ,)
-                    .replace(/(:\s*)([a-zA-Z0-9_.-]+)(\s*[,}\]])/g, (match, p1, p2, p3) => {
-                        if (/^(true|false|null|[0-9]+(\.[0-9]+)?)$/i.test(p2)) return match;
-                        return `${p1}"${p2}"${p3}`;
-                    })
-                    // 6. Fix missing commas between properties (e.g., "John" "age" -> "John", "age")
-                    .replace(/(["\d}\]]|true|false|null)(\s+)(?=["{\[])/g, '$1,$2')
-                    // 7. Fix trailing commas (e.g., "zip": 10001}, } -> "zip": 10001} })
-                    .replace(/,\s*([}\]])/g, '$1');
+                let fixedJSONText = autoFixJSON(originalText);
 
                 if (originalText === fixedJSONText) {
                     try {
                         JSON.parse(originalText);
-                        showToast('JSON is already valid!');
+                        showToast('JSON is already perfectly valid!');
                     } catch(e) {
                         showToast('No common errors found, but syntax is still invalid.');
                     }
                     return;
                 }
 
-                // Ensure the MDC wrapper is positioned so the overlay matches perfectly
+                // UI Overlay Logic
                 const wrapper = jsonTextarea.closest('.mdc-text-field');
                 if (wrapper && window.getComputedStyle(wrapper).position === 'static') {
                     wrapper.style.position = 'relative';
@@ -696,7 +692,6 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
 
                 const overlay = document.createElement('div');
                 overlay.className = 'json-overlay';
-                
                 overlay.style.top = `${jsonTextarea.offsetTop}px`;
                 overlay.style.left = `${jsonTextarea.offsetLeft}px`;
                 overlay.style.width = `${jsonTextarea.offsetWidth}px`;
@@ -711,7 +706,6 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                 overlay.innerHTML = `<span class="json-error-highlight">${fixedJSONText}</span>`;
                 if(wrapper) wrapper.appendChild(overlay);
 
-                // Remove overlay after a brief flash and apply the final formatted JSON
                 setTimeout(() => {
                     if(overlay) overlay.remove();
                     try {
@@ -723,14 +717,12 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                         console.warn('JSON parsing failed. Partial fix applied.', e);
                         showToast('Applied partial fixes, but syntax may still be broken.');
                     }
-                    // Force MDC to recognize the programmatic text change so labels float correctly
                     jsonTextarea.dispatchEvent(new Event('input', { bubbles: true }));
                 }, 800);
             });
-            
-        }); // End of DOMContentLoaded
+        });
 
-        // Copy to Clipboard (Keep outside DOMContentLoaded so inline onclick works)
+        // Global functions for buttons
         window.copyToClipboard = function(button, elementId) {
             const codeElement = document.querySelector(`#${elementId} code`);
             if (!codeElement) return showToast('Code element not found');
@@ -748,7 +740,6 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
             }).catch(err => showToast('Failed to copy to clipboard!'));
         };
 
-        // Clear Input (Keep outside DOMContentLoaded)
         window.clearInput = function() {
             document.getElementById('jsonInput').value = '';
             document.getElementById('className').value = 'WrapperClass';
@@ -762,7 +753,6 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
             Prism.highlightAll();
         };
 
-        // Download Classes (Keep outside DOMContentLoaded)
         window.downloadClasses = function() {
             const className = document.getElementById('className').value.trim() || 'WrapperClass';
             const apexContent = document.querySelector('#apexOutput code').textContent;
@@ -782,7 +772,6 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
             });
         };
 
-        // Generate Apex Class (Keep outside DOMContentLoaded)
         window.generateApexClass = function() {
             const jsonInput = document.getElementById('jsonInput').value;
             const className = document.getElementById('className').value.trim() || 'WrapperClass';
