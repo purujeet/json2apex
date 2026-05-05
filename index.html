@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8980910491820091"
-     crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8980910491820091" crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON to Apex Converter: Generate Classes & Tests Free</title>
@@ -345,7 +344,6 @@
             text-decoration: underline;
         }
 
-        /* New styles for engaging content */
         .hero-section {
             text-align: center;
             margin-bottom: 32px;
@@ -399,6 +397,29 @@
         .features-list li {
             margin-bottom: 8px;
             font-size: 1rem;
+        }
+
+        /* Auto-Fix Feature Styles */
+        .json-error-highlight { 
+            background-color: #ffe6e6; 
+            border-bottom: 2px solid red; 
+            color: #d8000c; 
+            font-weight: bold; 
+        }
+        [data-theme="dark"] .json-error-highlight {
+            background-color: rgba(211, 47, 47, 0.3);
+            color: #ffb4ab;
+        }
+        .json-overlay { 
+            position: absolute; 
+            background: transparent; 
+            font-family: inherit; 
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            overflow: auto; 
+            z-index: 100; 
+            box-sizing: border-box; 
+            pointer-events: none; /* Allows user to still click textarea normally */
         }
     </style>
     <script type="application/ld+json">
@@ -485,6 +506,9 @@
             <button class="mdc-button mdc-button--raised" onclick="generateApexClass()" aria-label="Generate Apex Class">
                 <span class="mdc-button__label">Generate Class</span>
             </button>
+            <button class="mdc-button mdc-button--outlined" id="btn-fix-json" aria-label="Auto-Fix JSON">
+                <span class="mdc-button__label">✨ Auto-Fix JSON</span>
+            </button>
             <button class="mdc-button mdc-button--outlined" onclick="clearInput()" aria-label="Clear Input">
                 <span class="mdc-button__label">Clear Input</span>
             </button>
@@ -514,18 +538,18 @@
 
     <footer>
         <p>
-        JSON2Apex: Empowering Salesforce Developers Worldwide
+        JSON2Apex: Empowering Salesforce Developers Worldwide<br><br>
 
-Founded in 2023, JSON2Apex is a dedicated platform providing essential tools and services for Salesforce professionals. Our mission is to streamline Apex development by automating repetitive tasks, saving developers hours on JSON parsing and class generation.
+Founded in 2023, JSON2Apex is a dedicated platform providing essential tools and services for Salesforce professionals. Our mission is to streamline Apex development by automating repetitive tasks, saving developers hours on JSON parsing and class generation.<br><br>
 
-As a team of certified Salesforce architects and full-stack developers, we understand the challenges of building scalable CRM solutions. With over 10 years of combined experience in enterprise integrations, we've created JSON2Apex to deliver fast, reliable code generation—free for core use, with premium support options for complex projects.
+As a team of certified Salesforce architects and full-stack developers, we understand the challenges of building scalable CRM solutions. With over 10 years of combined experience in enterprise integrations, we've created JSON2Apex to deliver fast, reliable code generation—free for core use, with premium support options for complex projects.<br><br>
 
-Why choose us? 
-- Instant, accurate conversions for nested JSON structures.
-- Automated test classes to ensure code quality.
-- Committed to the Salesforce community: regular updates based on user feedback.
+Why choose us? <br>
+- Instant, accurate conversions for nested JSON structures.<br>
+- Automated test classes to ensure code quality.<br>
+- Committed to the Salesforce community: regular updates based on user feedback.<br><br>
 
-Join thousands of devs who've boosted productivity with our tools. Let's build better Salesforce apps together.
+Join thousands of devs who've boosted productivity with our tools. Let's build better Salesforce apps together.<br><br>
 
 &copy; 2025 json2apex. All rights reserved. | <a href="#top">Back to Top</a></p>
     </footer>
@@ -808,95 +832,72 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                 showToast('Invalid JSON: ' + e.message);
             }
         }
+
+        /* =========================================================
+           AUTO-FIX JSON LOGIC
+           ========================================================= */
+        document.getElementById('btn-fix-json').addEventListener('click', function() {
+            const jsonTextarea = document.getElementById('jsonInput');
+            const originalText = jsonTextarea.value;
+            
+            if (!originalText.trim()) return;
+
+            // Advanced regex patterns for severe syntax fixes
+            let fixedJSONText = originalText
+                .replace(/'/g, '"')
+                .replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3')
+                .replace(/(:\s*)([a-zA-Z0-9_]+)"/g, '$1"$2"')
+                .replace(/(:\s*)([a-zA-Z0-9_.-]+)(\s*[,}])/g, (match, p1, p2, p3) => {
+                    if (/^(true|false|null|[0-9]+(\.[0-9]+)?)$/i.test(p2)) return match;
+                    return `${p1}"${p2}"${p3}`;
+                })
+                .replace(/"\s+"/g, '", "')
+                .replace(/,\s*([}\]])/g, '$1');
+
+            if (originalText === fixedJSONText) {
+                showToast('No common syntax errors found to auto-fix.');
+                return;
+            }
+
+            // Ensure the MDC wrapper is positioned so the overlay matches
+            const wrapper = jsonTextarea.closest('.mdc-text-field');
+            if (window.getComputedStyle(wrapper).position === 'static') {
+                wrapper.style.position = 'relative';
+            }
+
+            const overlay = document.createElement('div');
+            overlay.className = 'json-overlay';
+            
+            // Match exactly with the textarea positioning
+            overlay.style.top = `${jsonTextarea.offsetTop}px`;
+            overlay.style.left = `${jsonTextarea.offsetLeft}px`;
+            overlay.style.width = `${jsonTextarea.offsetWidth}px`;
+            overlay.style.height = `${jsonTextarea.offsetHeight}px`;
+            
+            // Match MDC styles to align the highlighted text
+            const computedStyle = window.getComputedStyle(jsonTextarea);
+            overlay.style.padding = computedStyle.padding;
+            overlay.style.fontSize = computedStyle.fontSize;
+            overlay.style.fontFamily = computedStyle.fontFamily;
+            overlay.style.lineHeight = computedStyle.lineHeight;
+            
+            overlay.innerHTML = `<span class="json-error-highlight">${fixedJSONText}</span>`;
+            wrapper.appendChild(overlay);
+
+            // Remove overlay after 1 second and apply final parsed JSON
+            setTimeout(() => {
+                overlay.remove();
+                try {
+                    const parsedObj = JSON.parse(fixedJSONText);
+                    jsonTextarea.value = JSON.stringify(parsedObj, null, 4);
+                    showToast('JSON auto-fixed successfully!');
+                } catch (e) {
+                    jsonTextarea.value = fixedJSONText;
+                    console.warn('JSON parsing failed. Partial fix applied.', e);
+                    showToast('Applied partial fixes, but syntax may still be invalid.');
+                }
+            }, 1000);
+        });
     </script>
-    <style>
-.json-error-highlight { 
-    background-color: #ffe6e6; 
-    border-bottom: 2px solid red; 
-    color: #d8000c; 
-    font-weight: bold; 
-}
-.json-overlay { 
-    position: absolute; 
-    background: #fff; 
-    font-family: monospace; 
-    white-space: pre-wrap; 
-    word-wrap: break-word; 
-    overflow: auto; 
-    z-index: 100; 
-    box-sizing: border-box; 
-}
-</style>
-
-<button id="btn-fix-json" type="button" style="position: fixed; bottom: 20px; right: 20px; z-index: 999; padding: 12px 18px; background: #0070d2; color: white; border: none; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; font-weight: bold; font-size: 16px;">
-    ✨ Auto-Fix JSON
-</button>
-
-<script>
-document.getElementById('btn-fix-json').addEventListener('click', function() {
-    // Automatically find the first textarea on the page
-    const jsonTextarea = document.querySelector('textarea'); 
-    if (!jsonTextarea) {
-        alert('No textarea found!');
-        return;
-    }
-
-    // Ensure parent is positioned correctly for the overlay
-    if (window.getComputedStyle(jsonTextarea.parentElement).position === 'static') {
-        jsonTextarea.parentElement.style.position = 'relative';
-        jsonTextarea.parentElement.style.display = 'block';
-    }
-
-    const originalText = jsonTextarea.value;
-    if (!originalText.trim()) return;
-
-    // Regex patterns for single quotes, unquoted keys, and trailing commas
-    const singleQuotesRegex = /'([^']+)'/g;
-    const unquotedKeysRegex = /([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g;
-    const trailingCommaRegex = /,\s*([}\]])/g;
-
-    // Create the highlighted HTML version
-    let highlightedHTML = originalText
-        .replace(singleQuotesRegex, '<span class="json-error-highlight">\'$1\'</span>')
-        .replace(unquotedKeysRegex, '$1<span class="json-error-highlight">$2</span>$3')
-        .replace(trailingCommaRegex, '<span class="json-error-highlight">,</span>$1');
-
-    // Create the corrected JSON version
-    let fixedJSONText = originalText
-        .replace(singleQuotesRegex, '"$1"')
-        .replace(unquotedKeysRegex, '$1"$2"$3')
-        .replace(trailingCommaRegex, '$1');
-
-    if (originalText === fixedJSONText) {
-        alert('No common syntax errors found to auto-fix.');
-        return;
-    }
-
-    // Generate and inject the overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'json-overlay';
-    overlay.style.top = `${jsonTextarea.offsetTop}px`;
-    overlay.style.left = `${jsonTextarea.offsetLeft}px`;
-    overlay.style.width = `${jsonTextarea.offsetWidth}px`;
-    overlay.style.height = `${jsonTextarea.offsetHeight}px`;
-    overlay.style.padding = window.getComputedStyle(jsonTextarea).padding;
-    overlay.style.fontSize = window.getComputedStyle(jsonTextarea).fontSize;
-    
-    overlay.innerHTML = highlightedHTML;
-    jsonTextarea.parentElement.appendChild(overlay);
-
-    // Remove overlay after 1.5s and apply fixed JSON
-    setTimeout(() => {
-        overlay.remove();
-        try {
-            // Try to pretty-print
-            jsonTextarea.value = JSON.stringify(JSON.parse(fixedJSONText), null, 4);
-        } catch (e) {
-            // Fallback to raw regex fix if there are other deeper structural issues
-            jsonTextarea.value = fixedJSONText;
-        }
-    }, 1500);
-});
-</script>
 </body>
 </html>
