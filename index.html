@@ -644,7 +644,7 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
             });
 
             /* =========================================================
-               AUTO-FIX JSON LOGIC (Pure function, no tests)
+               AUTO-FIX JSON LOGIC
                ========================================================= */
             function autoFixJSON(originalText) {
                 if (!originalText || !originalText.trim()) return originalText;
@@ -658,6 +658,11 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                         if (/^(true|false|null|[0-9]+(\.[0-9]+)?)$/i.test(p2)) return match;
                         return `${p1}"${p2}"${p3}`;
                     }) // Fix completely unquoted string values
+                    
+                    // NEW: Fix missing opening object bracket '{' 
+                    // (e.g., "details": "city": -> "details": { "city": )
+                    .replace(/(:\s*)(["'][a-zA-Z0-9_.-]+["']\s*:)/g, '$1{$2')
+                    
                     .replace(/(:\s*)(\{(?:[^{}]|(?:\{[^{}]*\}))*\})(\s*\])/g, '$1[$2$3') // Fix missing array bracket
                     .replace(/(["\d}\]]|true|false|null)(\s+)(?=["{\[])/g, '$1,$2') // Fix missing commas
                     .replace(/,\s*([}\]])/g, '$1'); // Fix trailing commas
