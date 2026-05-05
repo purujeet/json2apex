@@ -554,110 +554,189 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
 &copy; 2025 json2apex. All rights reserved. | <a href="#top">Back to Top</a></p>
     </footer>
 
-    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js" async></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" async></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-apex.min.js" async></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" async></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" async></script>
+   <!-- Use 'defer' instead of 'async' to prevent JS race conditions -->
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-apex.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+    
     <script>
-        // Initialize Material Design Components
-        document.querySelectorAll('.mdc-text-field').forEach((textField) => {
-            mdc.textField.MDCTextField.attachTo(textField);
-        });
-        document.querySelectorAll('.mdc-button').forEach((button) => {
-            mdc.ripple.MDCRipple.attachTo(button);
-        });
-
-        // Dark Mode Toggle
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const currentTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (currentTheme === 'dark' || (!currentTheme && prefersDark)) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            darkModeToggle.checked = true;
-        }
-
-        darkModeToggle.addEventListener('change', () => {
-            if (darkModeToggle.checked) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
-        });
-
-        // Show Toast Notification
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.setAttribute('role', 'alert');
-            toast.setAttribute('aria-live', 'assertive');
-
-            const messageSpan = document.createElement('span');
-            messageSpan.textContent = message;
-            toast.appendChild(messageSpan);
-
-            const closeButton = document.createElement('button');
-            closeButton.className = 'toast-close';
-            closeButton.innerHTML = '&times;';
-            closeButton.setAttribute('aria-label', 'Close toast');
-            toast.appendChild(closeButton);
-
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 10);
-
-            const timeoutId = setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
-            }, 30000);
-
-            closeButton.addEventListener('click', () => {
-                clearTimeout(timeoutId);
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
+        // Wrap everything in DOMContentLoaded to ensure the page and libraries are fully ready
+        window.addEventListener('DOMContentLoaded', () => {
+            
+            // Initialize Material Design Components
+            document.querySelectorAll('.mdc-text-field').forEach((textField) => {
+                mdc.textField.MDCTextField.attachTo(textField);
             });
-        }
+            document.querySelectorAll('.mdc-button').forEach((button) => {
+                mdc.ripple.MDCRipple.attachTo(button);
+            });
 
-        // File Upload Handler
-        document.getElementById('jsonFileUpload').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const content = e.target.result;
+            // Dark Mode Toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const currentTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (currentTheme === 'dark' || (!currentTheme && prefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                darkModeToggle.checked = true;
+            }
+
+            darkModeToggle.addEventListener('change', () => {
+                if (darkModeToggle.checked) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // Show Toast Notification
+            window.showToast = function(message) {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+
+                const messageSpan = document.createElement('span');
+                messageSpan.textContent = message;
+                toast.appendChild(messageSpan);
+
+                const closeButton = document.createElement('button');
+                closeButton.className = 'toast-close';
+                closeButton.innerHTML = '&times;';
+                closeButton.setAttribute('aria-label', 'Close toast');
+                toast.appendChild(closeButton);
+
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.classList.add('show'), 10);
+
+                const timeoutId = setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 5000);
+
+                closeButton.addEventListener('click', () => {
+                    clearTimeout(timeoutId);
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                });
+            };
+
+            // File Upload Handler
+            document.getElementById('jsonFileUpload').addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const content = e.target.result;
+                        try {
+                            JSON.parse(content);
+                            document.getElementById('jsonInput').value = content;
+                            document.getElementById('jsonInput').dispatchEvent(new Event('input', { bubbles: true }));
+                        } catch (err) {
+                            showToast('Invalid JSON file: ' + err.message);
+                        }
+                        document.getElementById('jsonFileUpload').value = '';
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            /* =========================================================
+               AUTO-FIX JSON LOGIC
+               ========================================================= */
+            document.getElementById('btn-fix-json').addEventListener('click', function() {
+                const jsonTextarea = document.getElementById('jsonInput');
+                const originalText = jsonTextarea.value;
+                
+                if (!originalText.trim()) {
+                    showToast('Please paste some JSON first!');
+                    return;
+                }
+
+                // Advanced regex patterns for severe syntax fixes
+                let fixedJSONText = originalText
+                    // 1. Fix smart quotes often copied from Word/Slack
+                    .replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+                    // 2. Convert single quotes to double quotes
+                    .replace(/'/g, '"')
+                    // 3. Fix unquoted keys (e.g., name: "John" -> "name": "John")
+                    .replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3')
+                    // 4. Fix missing starting quotes on values (e.g., : John" -> : "John")
+                    .replace(/(:\s*)([a-zA-Z0-9_.-]+)"/g, '$1"$2"')
+                    // 5. Fix completely unquoted string values (e.g., : John ,)
+                    .replace(/(:\s*)([a-zA-Z0-9_.-]+)(\s*[,}\]])/g, (match, p1, p2, p3) => {
+                        if (/^(true|false|null|[0-9]+(\.[0-9]+)?)$/i.test(p2)) return match;
+                        return `${p1}"${p2}"${p3}`;
+                    })
+                    // 6. Fix missing commas between properties (e.g., "John" "age" -> "John", "age")
+                    .replace(/"\s+"/g, '", "')
+                    // 7. Fix trailing commas (e.g., "zip": 10001}, } -> "zip": 10001} })
+                    .replace(/,\s*([}\]])/g, '$1');
+
+                if (originalText === fixedJSONText) {
                     try {
-                        JSON.parse(content);
-                        document.getElementById('jsonInput').value = content;
-                    } catch (err) {
-                        showToast('Invalid JSON file: ' + err.message);
+                        JSON.parse(originalText);
+                        showToast('JSON is already valid!');
+                    } catch(e) {
+                        showToast('No common errors found, but syntax is still invalid.');
                     }
-                    document.getElementById('jsonFileUpload').value = '';
-                };
-                reader.readAsText(file);
-            }
-        });
+                    return;
+                }
 
-        // Copy to Clipboard
-        function copyToClipboard(button, elementId) {
+                // Ensure the MDC wrapper is positioned so the overlay matches perfectly
+                const wrapper = jsonTextarea.closest('.mdc-text-field');
+                if (wrapper && window.getComputedStyle(wrapper).position === 'static') {
+                    wrapper.style.position = 'relative';
+                }
+
+                const overlay = document.createElement('div');
+                overlay.className = 'json-overlay';
+                
+                overlay.style.top = `${jsonTextarea.offsetTop}px`;
+                overlay.style.left = `${jsonTextarea.offsetLeft}px`;
+                overlay.style.width = `${jsonTextarea.offsetWidth}px`;
+                overlay.style.height = `${jsonTextarea.offsetHeight}px`;
+                
+                const computedStyle = window.getComputedStyle(jsonTextarea);
+                overlay.style.padding = computedStyle.padding;
+                overlay.style.fontSize = computedStyle.fontSize;
+                overlay.style.fontFamily = computedStyle.fontFamily;
+                overlay.style.lineHeight = computedStyle.lineHeight;
+                
+                overlay.innerHTML = `<span class="json-error-highlight">${fixedJSONText}</span>`;
+                if(wrapper) wrapper.appendChild(overlay);
+
+                // Remove overlay after a brief flash and apply the final formatted JSON
+                setTimeout(() => {
+                    if(overlay) overlay.remove();
+                    try {
+                        const parsedObj = JSON.parse(fixedJSONText);
+                        jsonTextarea.value = JSON.stringify(parsedObj, null, 4);
+                        showToast('✨ JSON auto-fixed successfully!');
+                    } catch (e) {
+                        jsonTextarea.value = fixedJSONText;
+                        console.warn('JSON parsing failed. Partial fix applied.', e);
+                        showToast('Applied partial fixes, but syntax may still be broken.');
+                    }
+                    // Force MDC to recognize the programmatic text change so labels float correctly
+                    jsonTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                }, 800);
+            });
+            
+        }); // End of DOMContentLoaded
+
+        // Copy to Clipboard (Keep outside DOMContentLoaded so inline onclick works)
+        window.copyToClipboard = function(button, elementId) {
             const codeElement = document.querySelector(`#${elementId} code`);
-            if (!codeElement) {
-                showToast('Code element not found for ' + elementId);
-                return;
-            }
+            if (!codeElement) return showToast('Code element not found');
             const text = codeElement.innerText.trim();
-            if (!text) {
-                showToast('No content to copy!');
-                return;
-            }
+            if (!text) return showToast('No content to copy!');
+            
             navigator.clipboard.writeText(text).then(() => {
                 button.classList.add('copied-feedback');
                 const tooltip = button.querySelector('.copy-tooltip');
@@ -666,13 +745,11 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                     button.classList.remove('copied-feedback');
                     tooltip.classList.remove('show');
                 }, 1000);
-            }).catch(err => {
-                showToast('Failed to copy to clipboard! Please try again.');
-            });
-        }
+            }).catch(err => showToast('Failed to copy to clipboard!'));
+        };
 
-        // Clear Input
-        function clearInput() {
+        // Clear Input (Keep outside DOMContentLoaded)
+        window.clearInput = function() {
             document.getElementById('jsonInput').value = '';
             document.getElementById('className').value = 'WrapperClass';
             document.getElementById('includeParse').checked = true;
@@ -683,18 +760,15 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                 button.querySelector('.copy-tooltip').classList.remove('show');
             });
             Prism.highlightAll();
-        }
+        };
 
-        // Download Classes
-        function downloadClasses() {
+        // Download Classes (Keep outside DOMContentLoaded)
+        window.downloadClasses = function() {
             const className = document.getElementById('className').value.trim() || 'WrapperClass';
             const apexContent = document.querySelector('#apexOutput code').textContent;
             const testContent = document.querySelector('#testOutput code').textContent;
 
-            if (!apexContent || !testContent) {
-                showToast('Please generate the classes first!');
-                return;
-            }
+            if (!apexContent || !testContent) return showToast('Please generate the classes first!');
 
             const zip = new JSZip();
             zip.file(`${className}.cls`, apexContent);
@@ -706,41 +780,36 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                 link.download = 'json2apex.zip';
                 link.click();
             });
-        }
+        };
 
-        // Generate Apex Class
-        function generateApexClass() {
+        // Generate Apex Class (Keep outside DOMContentLoaded)
+        window.generateApexClass = function() {
             const jsonInput = document.getElementById('jsonInput').value;
             const className = document.getElementById('className').value.trim() || 'WrapperClass';
             const includeParse = document.getElementById('includeParse').checked;
             const apexOutput = document.querySelector('#apexOutput code');
             const testOutput = document.querySelector('#testOutput code');
 
-            apexOutput.textContent = '';
-            testOutput.textContent = '';
-            document.querySelectorAll('.copy-button').forEach(button => {
-                button.classList.remove('copied-feedback');
-                button.querySelector('.copy-tooltip').classList.remove('show');
+            apexOutput.textContent = ''; testOutput.textContent = '';
+            document.querySelectorAll('.copy-button').forEach(b => {
+                b.classList.remove('copied-feedback');
+                b.querySelector('.copy-tooltip').classList.remove('show');
             });
 
             try {
                 const jsonObj = JSON.parse(jsonInput);
-
                 const usedClassNames = new Set([className]);
 
                 function sanitizeName(name) {
                     let sanitized = name.replace(/[^a-zA-Z0-9]/g, '_').replace(/^(\d)/, '_$1');
                     const reservedKeywords = ['class', 'public', 'private', 'protected', 'static', 'void', 'null', 'true', 'false', 'if', 'else', 'for', 'while'];
-                    if (reservedKeywords.includes(sanitized.toLowerCase())) {
-                        sanitized = '_' + sanitized;
-                    }
+                    if (reservedKeywords.includes(sanitized.toLowerCase())) sanitized = '_' + sanitized;
                     return sanitized;
                 }
 
                 function getUniqueClassName(baseName) {
                     let name = sanitizeName(baseName);
-                    let counter = 0;
-                    let uniqueName = name;
+                    let counter = 0, uniqueName = name;
                     while (usedClassNames.has(uniqueName)) {
                         counter++;
                         uniqueName = `${name}_${counter}`;
@@ -752,9 +821,7 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                 function getApexType(value, parentKey = '') {
                     if (value === null) return 'Object';
                     if (typeof value === 'string') return 'String';
-                    if (typeof value === 'number') {
-                        return Number.isInteger(value) ? 'Integer' : 'Decimal';
-                    }
+                    if (typeof value === 'number') return Number.isInteger(value) ? 'Integer' : 'Decimal';
                     if (typeof value === 'boolean') return 'Boolean';
                     if (Array.isArray(value)) {
                         if (value.length === 0) return 'List<Object>';
@@ -774,31 +841,23 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
 
                 function generateNestedClass(nestedClassName, obj) {
                     let nestedClass = `\n    public class ${nestedClassName} {\n`;
-                    const nestedProperties = [];
                     for (const [key, val] of Object.entries(obj)) {
-                        const apexType = getApexType(val, key);
-                        nestedProperties.push(`        public ${apexType} ${sanitizeName(key)};`);
+                        nestedClass += `        public ${getApexType(val, key)} ${sanitizeName(key)};\n`;
                     }
-                    nestedClass += nestedProperties.join('\n') + '\n';
-                    nestedClass += '    }\n';
-                    return nestedClass;
+                    return nestedClass + '    }\n';
                 }
 
                 let apexClass = `public class ${className} {\n`;
-                const properties = [];
-                const nestedClasses = [];
+                const properties = [], nestedClasses = [];
 
                 for (const [key, value] of Object.entries(jsonObj)) {
-                    const apexType = getApexType(value, key);
-                    properties.push(`    public ${apexType} ${sanitizeName(key)};`);
+                    properties.push(`    public ${getApexType(value, key)} ${sanitizeName(key)};`);
                 }
 
-                apexClass += properties.join('\n') + '\n';
-                apexClass += nestedClasses.join('');
+                apexClass += properties.join('\n') + '\n' + nestedClasses.join('');
                 if (includeParse) {
                     apexClass += `    public static ${className} parse(String json) {\n`;
-                    apexClass += `        return (${className}) System.JSON.deserialize(json, ${className}.class);\n`;
-                    apexClass += `    }\n`;
+                    apexClass += `        return (${className}) System.JSON.deserialize(json, ${className}.class);\n    }\n`;
                 }
                 apexClass += '}';
 
@@ -807,22 +866,13 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                 testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'").replace(/\n/g, '\\n')}';\n`;
                 testClass += `        ${className} wrapper = ${includeParse ? `${className}.parse(jsonString)` : `(${className}) System.JSON.deserialize(jsonString, ${className}.class)`};\n`;
                 testClass += `        System.assertNotEquals(null, wrapper, 'Parsed wrapper should not be null');\n`;
-                for (const [key, value] of Object.entries(jsonObj)) {
-                    const sanitizedKey = sanitizeName(key);
-                    if (typeof value !== 'object' && !Array.isArray(value) && value !== null) {
-                        testClass += `        System.assertEquals(${JSON.stringify(value)}, wrapper.${sanitizedKey}, 'Value for ${sanitizedKey} should match');\n`;
-                    } else if (Array.isArray(value)) {
-                        testClass += `        System.assertEquals(${value.length}, wrapper.${sanitizedKey} != null ? wrapper.${sanitizedKey}.size() : 0, 'List size for ${sanitizedKey} should match');\n`;
-                    } else if (typeof value === 'object' && value !== null) {
-                        testClass += `        System.assertNotEquals(null, wrapper.${sanitizedKey}, '${sanitizedKey} should not be null');\n`;
-                    }
+                testClass += `    }\n`;
+                if (includeParse) {
+                    testClass += `    @isTest\n    static void testParse() {\n`;
+                    testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'").replace(/\n/g, '\\n')}';\n`;
+                    testClass += `        ${className} wrapper = ${className}.parse(jsonString);\n`;
+                    testClass += `        System.assertNotEquals(null, wrapper, 'Parsed wrapper should not be null');\n    }\n`;
                 }
-                testClass += `    }\n`;
-                testClass += `    @isTest\n    static void testParse() {\n`;
-                testClass += `        String jsonString = '${jsonInput.replace(/'/g, "\\'").replace(/\n/g, '\\n')}';\n`;
-                testClass += `        ${className} wrapper = ${includeParse ? `${className}.parse(jsonString)` : `(${className}) System.JSON.deserialize(jsonString, ${className}.class)`};\n`;
-                testClass += `        System.assertNotEquals(null, wrapper, 'Parsed wrapper should not be null');\n`;
-                testClass += `    }\n`;
                 testClass += '}\n';
 
                 apexOutput.textContent = apexClass;
@@ -831,73 +881,7 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
             } catch (e) {
                 showToast('Invalid JSON: ' + e.message);
             }
-        }
-
-        /* =========================================================
-           AUTO-FIX JSON LOGIC
-           ========================================================= */
-        document.getElementById('btn-fix-json').addEventListener('click', function() {
-            const jsonTextarea = document.getElementById('jsonInput');
-            const originalText = jsonTextarea.value;
-            
-            if (!originalText.trim()) return;
-
-            // Advanced regex patterns for severe syntax fixes
-            let fixedJSONText = originalText
-                .replace(/'/g, '"')
-                .replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3')
-                .replace(/(:\s*)([a-zA-Z0-9_]+)"/g, '$1"$2"')
-                .replace(/(:\s*)([a-zA-Z0-9_.-]+)(\s*[,}])/g, (match, p1, p2, p3) => {
-                    if (/^(true|false|null|[0-9]+(\.[0-9]+)?)$/i.test(p2)) return match;
-                    return `${p1}"${p2}"${p3}`;
-                })
-                .replace(/"\s+"/g, '", "')
-                .replace(/,\s*([}\]])/g, '$1');
-
-            if (originalText === fixedJSONText) {
-                showToast('No common syntax errors found to auto-fix.');
-                return;
-            }
-
-            // Ensure the MDC wrapper is positioned so the overlay matches
-            const wrapper = jsonTextarea.closest('.mdc-text-field');
-            if (window.getComputedStyle(wrapper).position === 'static') {
-                wrapper.style.position = 'relative';
-            }
-
-            const overlay = document.createElement('div');
-            overlay.className = 'json-overlay';
-            
-            // Match exactly with the textarea positioning
-            overlay.style.top = `${jsonTextarea.offsetTop}px`;
-            overlay.style.left = `${jsonTextarea.offsetLeft}px`;
-            overlay.style.width = `${jsonTextarea.offsetWidth}px`;
-            overlay.style.height = `${jsonTextarea.offsetHeight}px`;
-            
-            // Match MDC styles to align the highlighted text
-            const computedStyle = window.getComputedStyle(jsonTextarea);
-            overlay.style.padding = computedStyle.padding;
-            overlay.style.fontSize = computedStyle.fontSize;
-            overlay.style.fontFamily = computedStyle.fontFamily;
-            overlay.style.lineHeight = computedStyle.lineHeight;
-            
-            overlay.innerHTML = `<span class="json-error-highlight">${fixedJSONText}</span>`;
-            wrapper.appendChild(overlay);
-
-            // Remove overlay after 1 second and apply final parsed JSON
-            setTimeout(() => {
-                overlay.remove();
-                try {
-                    const parsedObj = JSON.parse(fixedJSONText);
-                    jsonTextarea.value = JSON.stringify(parsedObj, null, 4);
-                    showToast('JSON auto-fixed successfully!');
-                } catch (e) {
-                    jsonTextarea.value = fixedJSONText;
-                    console.warn('JSON parsing failed. Partial fix applied.', e);
-                    showToast('Applied partial fixes, but syntax may still be invalid.');
-                }
-            }, 1000);
-        });
+        };
     </script>
 </body>
 </html>
