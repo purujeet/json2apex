@@ -809,5 +809,94 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
             }
         }
     </script>
+    <style>
+.json-error-highlight { 
+    background-color: #ffe6e6; 
+    border-bottom: 2px solid red; 
+    color: #d8000c; 
+    font-weight: bold; 
+}
+.json-overlay { 
+    position: absolute; 
+    background: #fff; 
+    font-family: monospace; 
+    white-space: pre-wrap; 
+    word-wrap: break-word; 
+    overflow: auto; 
+    z-index: 100; 
+    box-sizing: border-box; 
+}
+</style>
+
+<button id="btn-fix-json" type="button" style="position: fixed; bottom: 20px; right: 20px; z-index: 999; padding: 12px 18px; background: #0070d2; color: white; border: none; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; font-weight: bold; font-size: 16px;">
+    ✨ Auto-Fix JSON
+</button>
+
+<script>
+document.getElementById('btn-fix-json').addEventListener('click', function() {
+    // Automatically find the first textarea on the page
+    const jsonTextarea = document.querySelector('textarea'); 
+    if (!jsonTextarea) {
+        alert('No textarea found!');
+        return;
+    }
+
+    // Ensure parent is positioned correctly for the overlay
+    if (window.getComputedStyle(jsonTextarea.parentElement).position === 'static') {
+        jsonTextarea.parentElement.style.position = 'relative';
+        jsonTextarea.parentElement.style.display = 'block';
+    }
+
+    const originalText = jsonTextarea.value;
+    if (!originalText.trim()) return;
+
+    // Regex patterns for single quotes, unquoted keys, and trailing commas
+    const singleQuotesRegex = /'([^']+)'/g;
+    const unquotedKeysRegex = /([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g;
+    const trailingCommaRegex = /,\s*([}\]])/g;
+
+    // Create the highlighted HTML version
+    let highlightedHTML = originalText
+        .replace(singleQuotesRegex, '<span class="json-error-highlight">\'$1\'</span>')
+        .replace(unquotedKeysRegex, '$1<span class="json-error-highlight">$2</span>$3')
+        .replace(trailingCommaRegex, '<span class="json-error-highlight">,</span>$1');
+
+    // Create the corrected JSON version
+    let fixedJSONText = originalText
+        .replace(singleQuotesRegex, '"$1"')
+        .replace(unquotedKeysRegex, '$1"$2"$3')
+        .replace(trailingCommaRegex, '$1');
+
+    if (originalText === fixedJSONText) {
+        alert('No common syntax errors found to auto-fix.');
+        return;
+    }
+
+    // Generate and inject the overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'json-overlay';
+    overlay.style.top = `${jsonTextarea.offsetTop}px`;
+    overlay.style.left = `${jsonTextarea.offsetLeft}px`;
+    overlay.style.width = `${jsonTextarea.offsetWidth}px`;
+    overlay.style.height = `${jsonTextarea.offsetHeight}px`;
+    overlay.style.padding = window.getComputedStyle(jsonTextarea).padding;
+    overlay.style.fontSize = window.getComputedStyle(jsonTextarea).fontSize;
+    
+    overlay.innerHTML = highlightedHTML;
+    jsonTextarea.parentElement.appendChild(overlay);
+
+    // Remove overlay after 1.5s and apply fixed JSON
+    setTimeout(() => {
+        overlay.remove();
+        try {
+            // Try to pretty-print
+            jsonTextarea.value = JSON.stringify(JSON.parse(fixedJSONText), null, 4);
+        } catch (e) {
+            // Fallback to raw regex fix if there are other deeper structural issues
+            jsonTextarea.value = fixedJSONText;
+        }
+    }, 1500);
+});
+</script>
 </body>
 </html>
