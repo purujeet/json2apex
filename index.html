@@ -560,6 +560,9 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-apex.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+    
+    <!-- NEW: Import jsonrepair library for advanced AST-based auto-fixing -->
+    <script src="https://cdn.jsdelivr.net/npm/jsonrepair/lib/umd/jsonrepair.js" defer></script>
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
@@ -644,30 +647,8 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
             });
 
             /* =========================================================
-               AUTO-FIX JSON LOGIC
+               AUTO-FIX JSON LOGIC (AST Parser via jsonrepair)
                ========================================================= */
-            function autoFixJSON(originalText) {
-                if (!originalText || !originalText.trim()) return originalText;
-
-                return originalText
-                    .replace(/[“”]/g, '"').replace(/[‘’]/g, "'") // Fix smart quotes
-                    .replace(/'/g, '"') // Convert single to double quotes
-                    .replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3') // Fix unquoted keys
-                    .replace(/(:\s*)([a-zA-Z0-9_.-]+)"/g, '$1"$2"') // Fix missing starting quotes
-                    .replace(/(:\s*)([a-zA-Z0-9_.-]+)(\s*[,}\]])/g, (match, p1, p2, p3) => {
-                        if (/^(true|false|null|[0-9]+(\.[0-9]+)?)$/i.test(p2)) return match;
-                        return `${p1}"${p2}"${p3}`;
-                    }) // Fix completely unquoted string values
-                    
-                    // NEW: Fix missing opening object bracket '{' 
-                    // (e.g., "details": "city": -> "details": { "city": )
-                    .replace(/(:\s*)(["'][a-zA-Z0-9_.-]+["']\s*:)/g, '$1{$2')
-                    
-                    .replace(/(:\s*)(\{(?:[^{}]|(?:\{[^{}]*\}))*\})(\s*\])/g, '$1[$2$3') // Fix missing array bracket
-                    .replace(/(["\d}\]]|true|false|null)(\s+)(?=["{\[])/g, '$1,$2') // Fix missing commas
-                    .replace(/,\s*([}\]])/g, '$1'); // Fix trailing commas
-            }
-
             document.getElementById('btn-fix-json').addEventListener('click', function() {
                 const jsonTextarea = document.getElementById('jsonInput');
                 const originalText = jsonTextarea.value;
@@ -677,53 +658,62 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                     return;
                 }
 
-                let fixedJSONText = autoFixJSON(originalText);
-
-                if (originalText === fixedJSONText) {
-                    try {
-                        JSON.parse(originalText);
-                        showToast('JSON is already perfectly valid!');
-                    } catch(e) {
-                        showToast('No common errors found, but syntax is still invalid.');
-                    }
-                    return;
-                }
-
-                // UI Overlay Logic
-                const wrapper = jsonTextarea.closest('.mdc-text-field');
-                if (wrapper && window.getComputedStyle(wrapper).position === 'static') {
-                    wrapper.style.position = 'relative';
-                }
-
-                const overlay = document.createElement('div');
-                overlay.className = 'json-overlay';
-                overlay.style.top = `${jsonTextarea.offsetTop}px`;
-                overlay.style.left = `${jsonTextarea.offsetLeft}px`;
-                overlay.style.width = `${jsonTextarea.offsetWidth}px`;
-                overlay.style.height = `${jsonTextarea.offsetHeight}px`;
-                
-                const computedStyle = window.getComputedStyle(jsonTextarea);
-                overlay.style.padding = computedStyle.padding;
-                overlay.style.fontSize = computedStyle.fontSize;
-                overlay.style.fontFamily = computedStyle.fontFamily;
-                overlay.style.lineHeight = computedStyle.lineHeight;
-                
-                overlay.innerHTML = `<span class="json-error-highlight">${fixedJSONText}</span>`;
-                if(wrapper) wrapper.appendChild(overlay);
-
-                setTimeout(() => {
-                    if(overlay) overlay.remove();
-                    try {
-                        const parsedObj = JSON.parse(fixedJSONText);
-                        jsonTextarea.value = JSON.stringify(parsedObj, null, 4);
-                        showToast('✨ JSON auto-fixed successfully!');
-                    } catch (e) {
-                        jsonTextarea.value = fixedJSONText;
-                        console.warn('JSON parsing failed. Partial fix applied.', e);
-                        showToast('Applied partial fixes, but syntax may still be broken.');
-                    }
+                // First, check if it is already perfectly valid
+                try {
+                    const parsed = JSON.parse(originalText);
+                    // Reformat to ensure neatness even if valid
+                    jsonTextarea.value = JSON.stringify(parsed, null, 4);
+                    showToast('JSON is already valid! Formatted successfully.');
                     jsonTextarea.dispatchEvent(new Event('input', { bubbles: true }));
-                }, 800);
+                    return;
+                } catch(e) {
+                    // JSON is invalid, proceed to fix
+                }
+
+                try {
+                    // Use the globally available jsonrepair library
+                    // This handles missing colons, commas, quotes, brackets, etc.
+                    const repairedJSON = jsonrepair.jsonrepair(originalText);
+                    
+                    // Parse and neatly format the repaired JSON
+                    const parsedObj = JSON.parse(repairedJSON);
+                    const finalFormattedText = JSON.stringify(parsedObj, null, 4);
+
+                    // Optional UI Highlight effect
+                    const wrapper = jsonTextarea.closest('.mdc-text-field');
+                    if (wrapper && window.getComputedStyle(wrapper).position === 'static') {
+                        wrapper.style.position = 'relative';
+                    }
+
+                    const overlay = document.createElement('div');
+                    overlay.className = 'json-overlay';
+                    overlay.style.top = `${jsonTextarea.offsetTop}px`;
+                    overlay.style.left = `${jsonTextarea.offsetLeft}px`;
+                    overlay.style.width = `${jsonTextarea.offsetWidth}px`;
+                    overlay.style.height = `${jsonTextarea.offsetHeight}px`;
+                    
+                    const computedStyle = window.getComputedStyle(jsonTextarea);
+                    overlay.style.padding = computedStyle.padding;
+                    overlay.style.fontSize = computedStyle.fontSize;
+                    overlay.style.fontFamily = computedStyle.fontFamily;
+                    overlay.style.lineHeight = computedStyle.lineHeight;
+                    
+                    // Briefly flash the repaired text
+                    overlay.innerHTML = `<span class="json-error-highlight">${finalFormattedText}</span>`;
+                    if(wrapper) wrapper.appendChild(overlay);
+
+                    setTimeout(() => {
+                        if(overlay) overlay.remove();
+                        jsonTextarea.value = finalFormattedText;
+                        showToast('✨ JSON auto-fixed successfully!');
+                        jsonTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    }, 800);
+
+                } catch (err) {
+                    // If even jsonrepair fails, the JSON is completely structurally broken
+                    console.error('AST parsing failed:', err);
+                    showToast('Error: JSON structure is too broken to auto-fix. Please check manually.');
+                }
             });
         });
 
