@@ -674,7 +674,7 @@ Join thousands of devs who've boosted productivity with our tools. Let's build b
                         return `${p1}"${p2}"${p3}`;
                     })
                     // 6. Fix missing commas between properties (e.g., "John" "age" -> "John", "age")
-                    .replace(/"\s+"/g, '", "')
+                    .replace(/(["\d}\]]|true|false|null)(\s+)(?=["{\[])/g, '$1,$2')
                     // 7. Fix trailing commas (e.g., "zip": 10001}, } -> "zip": 10001} })
                     .replace(/,\s*([}\]])/g, '$1');
 
