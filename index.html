@@ -1177,7 +1177,7 @@
                 }
 
                 try {
-                    const repairedJSON = jsonrepair.jsonrepair(originalText);
+                    const repairedJSON = JSONRepair.jsonrepair(originalText);
                     const parsedObj = JSON.parse(repairedJSON);
                     const finalFormattedText = JSON.stringify(parsedObj, null, getIndentSpaces());
 
