@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236200ee;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%233700b3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='25' fill='url(%23grad)'/%3E%3Ctext x='50' y='64' font-family='monospace' font-size='38' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EJ2A%3C/text%3E%3C/svg%3E">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Handle Dynamic Key Structures and Nested Arrays in Apex - json2apex Blog</title>
+    <meta name="description" content="An advanced guide for Salesforce developers on parsing dynamic JSON structures, unknown property keys, and multi-dimensional lists inside Apex.">
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --container-bg: #ffffff;
+            --text-color: #212529;
+            --primary-color: #6200ee;
+            --primary-dark: #3700b3;
+            --success-color: #2e7d32;
+            --error-color: #c62828;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --primary-dark: #2d2d2d;
+            --success-color: #81c784;
+            --error-color: #e57373;
+            --border-color: #333333;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .theme-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px;
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            box-sizing: border-box;
+            width: 95%;
+        }
+
+        .article-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .article-back-link:hover {
+            text-decoration: underline;
+        }
+
+        .article-title {
+            font-size: 2.3rem;
+            margin: 0 0 16px 0;
+            line-height: 1.25;
+            color: var(--primary-color);
+        }
+
+        .article-meta {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .article-body h2 {
+            font-size: 1.6rem;
+            margin-top: 36px;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        .article-body p, .article-body li {
+            font-size: 1.08rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .article-body ul, .article-body ol {
+            padding-left: 24px;
+            margin-bottom: 20px;
+        }
+
+        .article-body code {
+            font-family: 'Roboto Mono', monospace;
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 90%;
+        }
+
+        [data-theme="dark"] .article-body code {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .article-body pre {
+            margin: 24px 0;
+            border-radius: 8px;
+            overflow: auto;
+        }
+
+        .article-body pre code {
+            background: none !important;
+            padding: 0;
+            font-size: 14px;
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+            padding: 24px;
+            margin-top: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo-content">
+            <div class="logo-text">json2apex.com</div>
+            <div class="subtitle">Best JSON to Apex Converter</div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="blog.html">Blog</a>
+            <a href="contact.html">Contact</a>
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle">Dark Mode</label>
+            </div>
+        </div>
+    </nav>
+
+    <article class="article-container">
+        <a href="blog.html" class="article-back-link"><i class="material-icons" style="font-size: 18px; vertical-align: middle;">arrow_back</i> Back to Blog</a>
+        
+        <h1 class="article-title">How to Handle Dynamic Key Structures and Nested Arrays in Apex</h1>
+        
+        <div class="article-meta">
+            <i class="material-icons" style="font-size: 15px;">calendar_today</i>
+            <span>Published: July 6, 2026</span>
+            <span>•</span>
+            <span>By the json2apex team</span>
+            <span>•</span>
+            <span>6 min read</span>
+        </div>
+
+        <div class="article-body">
+            <p>One of the most complex challenges in API integrations is handling JSON responses containing **dynamic keys**. Dynamic keys are property keys that are not fixed names, but instead change depending on user IDs, timestamps, or product codes. In this article, we explain how to parse these unpredictable JSON payloads within the static constraints of Salesforce Apex.</p>
+
+            <h2>The Problem with Static Class Mapping</h2>
+            <p>Static deserialization methods (like <code>JSON.deserialize()</code>) require class variables to perfectly match the JSON keys. Consider this payload containing dynamic user IDs as keys:</p>
+
+            <pre class="language-javascript"><code class="language-javascript">{
+    "users": {
+        "usr_101": { "name": "Alice" },
+        "usr_102": { "name": "Bob" }
+    }
+}</code></pre>
+
+            <p>Because the keys "usr_101" and "usr_102" change dynamically, you cannot define them statically as class properties. Attempting to do so would result in compile errors or unmapped properties.</p>
+
+            <h2>Solution 1: Map-Based Deserialization</h2>
+            <p>The standard way to resolve dynamic key scenarios is to parse the payload as a generic key-value map. Instead of modeling the entire structure, map only the static portion, and cast the dynamic child nodes to a <code>Map&lt;String, Object&gt;</code>:</p>
+
+            <pre class="language-javascript"><code class="language-javascript">String payload = '{"users": {"usr_101": {"name": "Alice"}, "usr_102": {"name": "Bob"}}}';
+
+// Parse statically to root level
+Map&lt;String, Object&gt; root = (Map&lt;String, Object&gt;) JSON.deserializeUntyped(payload);
+Map&lt;String, Object&gt; usersMap = (Map&lt;String, Object&gt;) root.get('users');
+
+// Loop through dynamic keys
+for (String userId : usersMap.keySet()) {
+    Map&lt;String, Object&gt; userData = (Map&lt;String, Object&gt;) usersMap.get(userId);
+    System.debug('User ID: ' + userId + ', Name: ' + userData.get('name'));
+}</code></pre>
+
+            <p>This allows your code to process any dynamic ID structure without requiring class adjustments.</p>
+
+            <h2>Solution 2: Pre-Processing JSON via String Manipulation</h2>
+            <p>If you prefer working with type-safe wrapper classes, you can pre-process the raw JSON string before deserializing it. By converting the dynamic key structure into a standard array format, you can deserialize it into list properties.</p>
+            <p>For example, you can write a utility method to replace dynamic keys with static array labels: </p>
+            <p>Original Dynamic Keys:</p>
+            <pre class="language-javascript"><code class="language-javascript">"users": {
+    "usr_101": { "name": "Alice" }
+}</code></pre>
+            <p>Converted Array Structure:</p>
+            <pre class="language-javascript"><code class="language-javascript">"users": [
+    { "id": "usr_101", "name": "Alice" }
+]</code></pre>
+            <p>By using standard regular expressions or string replacement to reformat the payload, you can then deserialize it directly into a standard list wrapper, preserving all the compilation checking benefits of wrapper classes.</p>
+
+            <h2>Best Practices for Dynamic JSON in Salesforce</h2>
+            <ul>
+                <li>**Check for Nulls**: Dynamic payloads frequently contain missing properties. Always verify that a map key exists before calling methods on it to prevent <code>NullPointerExceptions</code>.</li>
+                <li>**Avoid Massive Casts**: Deeply nested dynamic arrays can require multiple lines of type casting, which makes code unreadable. Break your casting steps down into smaller, well-commented statements.</li>
+                <li>**Benchmark CPU Limits**: Running regex replacements or parsing massive nested maps consumes Salesforce CPU cycles. Run stress tests in sandboxes to ensure you remain safely below transaction limits.</li>
+            </ul>
+
+            <h2>Conclusion</h2>
+            <p>While dynamic JSON keys complicate static Apex compilation, combining untyped parsing maps with type-safe wrapper models allows you to handle any payload structure gracefully. Selecting the right balance between maps and classes keeps your Salesforce integration robust and performant.</p>
+        </div>
+    </article>
+
+    <footer>
+        <p>&copy; 2026 json2apex. All rights reserved. | 
+        <a href="index.html">Home</a> | 
+        <a href="about.html">About</a> | 
+        <a href="faq.html">FAQ</a> | 
+        <a href="blog.html">Blog</a> | 
+        <a href="contact.html">Contact Us</a> | 
+        <a href="privacy.html">Privacy Policy</a> | 
+        <a href="terms.html">Terms of Service</a>
+        </p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const currentTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (currentTheme === 'dark' || (!currentTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            darkModeToggle.checked = true;
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>

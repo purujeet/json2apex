@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236200ee;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%233700b3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='25' fill='url(%23grad)'/%3E%3Ctext x='50' y='64' font-family='monospace' font-size='38' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EJ2A%3C/text%3E%3C/svg%3E">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - json2apex | Support & Feedback</title>
+    <meta name="description" content="Get in touch with the json2apex team for support, feature requests, or business inquiries. We are here to help Salesforce developers.">
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --container-bg: #ffffff;
+            --text-color: #212529;
+            --primary-color: #6200ee;
+            --primary-dark: #3700b3;
+            --success-color: #2e7d32;
+            --error-color: #c62828;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --primary-dark: #2d2d2d;
+            --success-color: #81c784;
+            --error-color: #e57373;
+            --border-color: #333333;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .theme-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .contact-container {
+            display: flex;
+            flex-direction: row;
+            gap: 32px;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            box-sizing: border-box;
+            width: 95%;
+        }
+
+        @media (max-width: 768px) {
+            .contact-container {
+                flex-direction: column;
+            }
+        }
+
+        .contact-info, .contact-form-card {
+            flex: 1;
+            background-color: var(--container-bg);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            box-sizing: border-box;
+        }
+
+        .contact-info h1, .contact-form-card h2 {
+            font-size: 2rem;
+            margin-bottom: 24px;
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .contact-info p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .info-item i {
+            font-size: 28px;
+            color: var(--primary-color);
+        }
+
+        .info-item span {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Form styling */
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .form-field label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .form-field input, .form-field textarea {
+            padding: 12px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-field input:focus, .form-field textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.15);
+        }
+
+        .form-field textarea {
+            resize: vertical;
+            height: 120px;
+        }
+
+        .submit-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+            padding: 24px;
+            margin-top: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Simple toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            padding: 12px 24px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo-content">
+            <div class="logo-text">json2apex.com</div>
+            <div class="subtitle">Best JSON to Apex Converter</div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="blog.html">Blog</a>
+            <a href="contact.html">Contact</a>
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle">Dark Mode</label>
+            </div>
+        </div>
+    </nav>
+
+    <div class="contact-container">
+        <div class="contact-info">
+            <h1>Contact Us</h1>
+            <p>Have questions, feedback, or feature requests? We'd love to hear from you. Get in touch with us using the form or through our direct channels. The json2apex developer team is committed to delivering tools that optimize your Salesforce workflows.</p>
+            
+            <div class="info-item">
+                <i class="material-icons">email</i>
+                <div>
+                    <span style="display: block; font-size: 14px; opacity: 0.8;">Email Us</span>
+                    <span>support@json2apex.com</span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <i class="material-icons">forum</i>
+                <div>
+                    <span style="display: block; font-size: 14px; opacity: 0.8;">Open Source Community</span>
+                    <span>github.com/purujeet/json2apex</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-form-card">
+            <h2>Send a Message</h2>
+            <form id="contactForm" onsubmit="handleContactSubmit(event)">
+                <div class="form-field">
+                    <label for="contactName">Name</label>
+                    <input type="text" id="contactName" required placeholder="Your full name">
+                </div>
+                <div class="form-field">
+                    <label for="contactEmail">Email Address</label>
+                    <input type="email" id="contactEmail" required placeholder="your.email@example.com">
+                </div>
+                <div class="form-field">
+                    <label for="contactMsg">Message</label>
+                    <textarea id="contactMsg" required placeholder="How can we help you?"></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 json2apex. All rights reserved. | 
+        <a href="index.html">Home</a> | 
+        <a href="about.html">About</a> | 
+        <a href="faq.html">FAQ</a> | 
+        <a href="blog.html">Blog</a> | 
+        <a href="contact.html">Contact Us</a> | 
+        <a href="privacy.html">Privacy Policy</a> | 
+        <a href="terms.html">Terms of Service</a>
+        </p>
+    </footer>
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const currentTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (currentTheme === 'dark' || (!currentTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            darkModeToggle.checked = true;
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Form submit simulation
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('contactName').value;
+            const email = document.getElementById('contactEmail').value;
+            const msg = document.getElementById('contactMsg').value;
+
+            if (name && email && msg) {
+                // Show simulated success toast
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.innerHTML = `<i class="material-icons" style="color: var(--success-color);">check_circle</i><span>Thank you, ${name}! Your message has been sent.</span>`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.classList.add('show'), 10);
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 4000);
+
+                document.getElementById('contactForm').reset();
+            }
+        }
+    </script>
+</body>
+</html>

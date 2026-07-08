@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236200ee;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%233700b3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='25' fill='url(%23grad)'/%3E%3Ctext x='50' y='64' font-family='monospace' font-size='38' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EJ2A%3C/text%3E%3C/svg%3E">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salesforce Developer Blog - Guides on JSON, APIs & Apex wrappers</title>
+    <meta name="description" content="Read expert articles on Salesforce development, JSON parsing, Apex serialization, writing robust unit test classes, and custom REST API design.">
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --container-bg: #ffffff;
+            --text-color: #212529;
+            --primary-color: #6200ee;
+            --primary-dark: #3700b3;
+            --success-color: #2e7d32;
+            --error-color: #c62828;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --primary-dark: #2d2d2d;
+            --success-color: #81c784;
+            --error-color: #e57373;
+            --border-color: #333333;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .theme-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .blog-header {
+            text-align: center;
+            padding: 48px 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .blog-header h1 {
+            font-size: 2.5rem;
+            margin: 0 0 12px 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .blog-header p {
+            font-size: 1.2rem;
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .blog-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        /* Grid of articles */
+        .article-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .article-card {
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .article-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .article-card-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .meta-info {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .article-title {
+            font-size: 1.4rem;
+            margin: 0 0 12px 0;
+            line-height: 1.3;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .article-title a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .article-title a:hover {
+            text-decoration: underline;
+        }
+
+        .article-summary {
+            font-size: 0.98rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .read-more-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: gap 0.2s;
+        }
+
+        .read-more-btn:hover {
+            gap: 8px;
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+            padding: 24px;
+            margin-top: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo-content">
+            <div class="logo-text">json2apex.com</div>
+            <div class="subtitle">Best JSON to Apex Converter</div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="blog.html">Blog</a>
+            <a href="contact.html">Contact</a>
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle">Dark Mode</label>
+            </div>
+        </div>
+    </nav>
+
+    <header class="blog-header">
+        <h1>Salesforce Developer Blog</h1>
+        <p>In-depth technical guides, tutorials, and best practices for Salesforce integrations.</p>
+    </header>
+
+    <div class="blog-container">
+        <div class="article-grid">
+            
+            <!-- Article 1 -->
+            <div class="article-card">
+                <div class="article-card-content">
+                    <div class="meta-info">
+                        <i class="material-icons" style="font-size: 14px;">calendar_today</i>
+                        <span>July 8, 2026</span>
+                        <span>•</span>
+                        <span>5 min read</span>
+                    </div>
+                    <h2 class="article-title">
+                        <a href="blog-understanding-json-apex.html">Understanding JSON Serialization and Deserialization in Salesforce Apex</a>
+                    </h2>
+                    <p class="article-summary">Learn how JSON.serialize and JSON.deserialize work natively in Salesforce. Understand performance limits, untyped parsing with Maps, and when to use type-safe deserialization.</p>
+                    <a href="blog-understanding-json-apex.html" class="read-more-btn">Read Article <i class="material-icons" style="font-size: 16px;">arrow_forward</i></a>
+                </div>
+            </div>
+
+            <!-- Article 2 -->
+            <div class="article-card">
+                <div class="article-card-content">
+                    <div class="meta-info">
+                        <i class="material-icons" style="font-size: 14px;">calendar_today</i>
+                        <span>July 7, 2026</span>
+                        <span>•</span>
+                        <span>4 min read</span>
+                    </div>
+                    <h2 class="article-title">
+                        <a href="blog-why-wrapper-classes.html">Why You Should Use Apex Wrapper Classes for Integration Payloads</a>
+                    </h2>
+                    <p class="article-summary">Explore the architecture benefits of building dedicated Apex Wrapper classes. Discover why typed wrappers keep your codebase clean, maintainable, and highly mockable during testing.</p>
+                    <a href="blog-why-wrapper-classes.html" class="read-more-btn">Read Article <i class="material-icons" style="font-size: 16px;">arrow_forward</i></a>
+                </div>
+            </div>
+
+            <!-- Article 3 -->
+            <div class="article-card">
+                <div class="article-card-content">
+                    <div class="meta-info">
+                        <i class="material-icons" style="font-size: 14px;">calendar_today</i>
+                        <span>July 6, 2026</span>
+                        <span>•</span>
+                        <span>6 min read</span>
+                    </div>
+                    <h2 class="article-title">
+                        <a href="blog-handling-dynamic-keys.html">How to Handle Dynamic Key Structures and Nested Arrays in Apex</a>
+                    </h2>
+                    <p class="article-summary">Dynamic JSON keys can break static compilation in Salesforce. Learn advanced deserialization techniques using untyped parsing (Map&lt;String, Object&gt;) to parse unpredictable API structures.</p>
+                    <a href="blog-handling-dynamic-keys.html" class="read-more-btn">Read Article <i class="material-icons" style="font-size: 16px;">arrow_forward</i></a>
+                </div>
+            </div>
+
+            <!-- Article 4 -->
+            <div class="article-card">
+                <div class="article-card-content">
+                    <div class="meta-info">
+                        <i class="material-icons" style="font-size: 14px;">calendar_today</i>
+                        <span>July 5, 2026</span>
+                        <span>•</span>
+                        <span>5 min read</span>
+                    </div>
+                    <h2 class="article-title">
+                        <a href="blog-apex-test-coverage-best-practices.html">Best Practices for Writing Apex Test Classes with 100% Code Coverage</a>
+                    </h2>
+                    <p class="article-summary">Salesforce mandates 75% test coverage, but wrappers deserve 100%. Step-by-step tutorial on writing reliable assertions, mocking Web Service calls, and verifying parsing failures.</p>
+                    <a href="blog-apex-test-coverage-best-practices.html" class="read-more-btn">Read Article <i class="material-icons" style="font-size: 16px;">arrow_forward</i></a>
+                </div>
+            </div>
+
+            <!-- Article 5 -->
+            <div class="article-card">
+                <div class="article-card-content">
+                    <div class="meta-info">
+                        <i class="material-icons" style="font-size: 14px;">calendar_today</i>
+                        <span>July 4, 2026</span>
+                        <span>•</span>
+                        <span>4 min read</span>
+                    </div>
+                    <h2 class="article-title">
+                        <a href="blog-common-parsing-errors-salesforce.html">Common JSON Parsing Errors in Salesforce and How to Avoid Them</a>
+                    </h2>
+                    <p class="article-summary">Troubleshoot standard Salesforce runtime errors like 'JSON_PARSER_ERROR' or type mismatch. Understand reserved keyword escaping and parsing empty vs null properties.</p>
+                    <a href="blog-common-parsing-errors-salesforce.html" class="read-more-btn">Read Article <i class="material-icons" style="font-size: 16px;">arrow_forward</i></a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 json2apex. All rights reserved. | 
+        <a href="index.html">Home</a> | 
+        <a href="about.html">About</a> | 
+        <a href="faq.html">FAQ</a> | 
+        <a href="blog.html">Blog</a> | 
+        <a href="contact.html">Contact Us</a> | 
+        <a href="privacy.html">Privacy Policy</a> | 
+        <a href="terms.html">Terms of Service</a>
+        </p>
+    </footer>
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const currentTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (currentTheme === 'dark' || (!currentTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            darkModeToggle.checked = true;
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236200ee;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%233700b3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='25' fill='url(%23grad)'/%3E%3Ctext x='50' y='64' font-family='monospace' font-size='38' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EJ2A%3C/text%3E%3C/svg%3E">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - json2apex | Free JSON to Apex Converter</title>
+    <meta name="description" content="Read our Privacy Policy to understand how json2apex handles cookies, third-party advertising partners like Google AdSense, and user data privacy.">
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --container-bg: #ffffff;
+            --text-color: #212529;
+            --primary-color: #6200ee;
+            --primary-dark: #3700b3;
+            --success-color: #2e7d32;
+            --error-color: #c62828;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --primary-dark: #2d2d2d;
+            --success-color: #81c784;
+            --error-color: #e57373;
+            --border-color: #333333;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .theme-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .content-section {
+            max-width: 900px;
+            margin: 32px auto;
+            padding: 40px;
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        .content-section h1 {
+            font-size: 2.2rem;
+            margin-bottom: 24px;
+            color: var(--primary-color);
+        }
+
+        .content-section h2 {
+            font-size: 1.5rem;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+        }
+
+        .content-section p, .content-section li {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .content-section ul {
+            padding-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+            padding: 24px;
+            margin-top: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo-content">
+            <div class="logo-text">json2apex.com</div>
+            <div class="subtitle">Best JSON to Apex Converter</div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="blog.html">Blog</a>
+            <a href="contact.html">Contact</a>
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle">Dark Mode</label>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-section">
+        <h1>Privacy Policy</h1>
+        <p>Last updated: July 8, 2026</p>
+        <p>At json2apex, accessible from www.json2apex.com, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by json2apex and how we use it.</p>
+        
+        <h2>General Data Protection</h2>
+        <p>All JSON conversion and Apex generation are performed directly within your browser client-side using JavaScript. Your JSON input text is not sent to our servers, nor do we store any of your configuration parameters on our database servers. Your source material remains completely private and secure on your local workstation.</p>
+
+        <h2>Log Files</h2>
+        <p>json2apex follows a standard procedure of using log files. These files log visitors when they visit websites. All hosting companies do this as a part of hosting services' analytics. The information collected by log files includes internet protocol (IP) addresses, browser type, Internet Service Provider (ISP), date and time stamp, referring/exit pages, and possibly the number of clicks. These are not linked to any information that is personally identifiable. The purpose of the information is for analyzing trends, administering the site, tracking users' movement on the website, and gathering demographic information.</p>
+
+        <h2>Google DoubleClick DART Cookie</h2>
+        <p>Google is one of the third-party vendors on our site. It also uses cookies, known as DART cookies, to serve ads to our site visitors based upon their visit to www.json2apex.com and other sites on the internet. However, visitors may choose to decline the use of DART cookies by visiting the Google ad and content network Privacy Policy at the following URL: <a href="https://policies.google.com/technologies/ads" target="_blank" style="color: var(--primary-color);">https://policies.google.com/technologies/ads</a></p>
+
+        <h2>Our Advertising Partners</h2>
+        <p>Some of the advertisers on our site may use cookies and web beacons. Our advertising partners include:</p>
+        <ul>
+            <li>Google AdSense</li>
+        </ul>
+        <p>Each of our advertising partners has their own Privacy Policy for their policies on user data. For easier access, we hyperlinked to their Privacy Policies above.</p>
+
+        <h2>Third-Party Privacy Policies</h2>
+        <p>json2apex's Privacy Policy does not apply to other advertisers or websites. Thus, we are advising you to consult the respective Privacy Policies of these third-party ad servers for more detailed information. It may include their practices and instructions about how to opt-out of certain options.</p>
+        <p>You can choose to disable cookies through your individual browser options. To know more detailed information about cookie management with specific web browsers, it can be found at the browsers' respective websites.</p>
+
+        <h2>Children's Information</h2>
+        <p>Another part of our priority is adding protection for children while using the internet. We encourage parents and guardians to observe, participate in, and/or monitor and guide their online activity.</p>
+        <p>json2apex does not knowingly collect any Personal Identifiable Information from children under the age of 13. If you think that your child provided this kind of information on our website, we strongly encourage you to contact us immediately and we will do our best efforts to promptly remove such information from our records.</p>
+        
+        <h2>Consent</h2>
+        <p>By using our website, you hereby consent to our Privacy Policy and agree to its Terms and Conditions.</p>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 json2apex. All rights reserved. | 
+        <a href="index.html">Home</a> | 
+        <a href="about.html">About</a> | 
+        <a href="faq.html">FAQ</a> | 
+        <a href="blog.html">Blog</a> | 
+        <a href="contact.html">Contact Us</a> | 
+        <a href="privacy.html">Privacy Policy</a> | 
+        <a href="terms.html">Terms of Service</a>
+        </p>
+    </footer>
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const currentTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (currentTheme === 'dark' || (!currentTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            darkModeToggle.checked = true;
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>
