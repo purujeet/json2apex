@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236200ee;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%233700b3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='25' fill='url(%23grad)'/%3E%3Ctext x='50' y='64' font-family='monospace' font-size='38' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EJ2A%3C/text%3E%3C/svg%3E">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salesforce Developer Guide: Apex Wrapper Classes | json2apex</title>
+    <meta name="description" content="In-depth guide to building robust Salesforce integrations using Apex Wrapper Classes. Learn how to handle reserved keywords, avoid JSON_PARSER_ERRORs, and deserialize JSON payloads.">
+    <meta name="keywords" content="Salesforce Integration, Apex Wrapper Class, JSON Deserialization, Salesforce Reserved Keywords, JSON_PARSER_ERROR, Apex callout">
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --container-bg: #ffffff;
+            --text-color: #212529;
+            --primary-color: #6200ee;
+            --primary-dark: #3700b3;
+            --success-color: #2e7d32;
+            --error-color: #c62828;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --primary-dark: #2d2d2d;
+            --success-color: #81c784;
+            --error-color: #e57373;
+            --border-color: #333333;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .theme-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .hero-section h1 {
+            font-size: 2.2rem;
+            margin: 0 0 12px 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-section p {
+            font-size: 1.1rem;
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .content-section {
+            max-width: 960px;
+            margin: 32px auto;
+            padding: 40px;
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        .content-section h2 {
+            font-size: 1.6rem;
+            margin-top: 36px;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .content-section h3 {
+            font-size: 1.25rem;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            color: var(--primary-color);
+        }
+
+        .content-section p, .content-section li {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .content-section ul, .content-section ol {
+            padding-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        .info-box {
+            background-color: rgba(98, 0, 238, 0.05);
+            border-left: 4px solid var(--primary-color);
+            padding: 16px 20px;
+            margin: 24px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .info-box p {
+            margin: 0;
+            font-style: italic;
+        }
+
+        pre[class*="language-"] {
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+            padding: 24px;
+            margin-top: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8980910491820091" crossorigin="anonymous"></script>
+</head>
+<body>
+    <nav>
+        <div class="logo-content">
+            <div class="logo-text">json2apex.com</div>
+            <div class="subtitle">Best JSON to Apex Converter</div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="salesforce-integration-guide.html">Guide</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="blog.html">Blog</a>
+            <a href="contact.html">Contact</a>
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle">Dark Mode</label>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <h1>Salesforce Integration Guide</h1>
+        <p>A comprehensive reference for building typed JSON wrapper classes and parsing callouts in Salesforce Apex.</p>
+    </header>
+
+    <div class="content-section">
+        <h2>Introduction to Salesforce API Integrations</h2>
+        <p>
+            When building integrations within the Salesforce platform, Apex developers frequently interact with external REST APIs. These external APIs communicate by exchanging JSON payloads. To consume these responses inside Salesforce, you must parse the JSON format back into native Apex data structures.
+        </p>
+        <p>
+            While Apex supports untyped JSON deserialization (using generic maps of strings to objects), using <strong>statically typed Apex Wrapper Classes</strong> is the industry-recognized best practice. This approach provides:
+        </p>
+        <ul>
+            <li><strong>Compile-time safety:</strong> Errors are caught during development or deployment, rather than crashing at runtime.</li>
+            <li><strong>IDE autocomplete:</strong> Properties are explicitly typed, making code easier to write and maintain in tools like VS Code.</li>
+            <li><strong>Self-documenting APIs:</strong> The wrapper structure models the external JSON schema, making integrations straightforward to understand for team members.</li>
+        </ul>
+
+        <div class="info-box">
+            <p><strong>Note:</strong> By automating the creation of wrapper and unit test classes, <strong>json2apex</strong> helps developers eliminate hours of repetitive boilerplate coding.</p>
+        </div>
+
+        <h2>Statically Typed Deserialization in Action</h2>
+        <p>
+            Salesforce provides the native <code>JSON.deserialize()</code> method to parse JSON content into a specific Apex class. Below is the general pattern used to call and deserialize an API payload:
+        </p>
+
+        <pre class="language-apex"><code>// 1. Fetch the JSON response from Http Callout
+HttpResponse response = http.send(request);
+String jsonBody = response.getBody();
+
+// 2. Deserialize the response into the Apex wrapper class
+MyWrapperClass data = (MyWrapperClass) JSON.deserialize(jsonBody, MyWrapperClass.class);
+
+// 3. Directly access strongly typed fields
+System.debug('User ID: ' + data.userId);
+System.debug('User Email: ' + data.contactInfo.email);</code></pre>
+
+        <h2>Handling Salesforce Reserved Keywords</h2>
+        <p>
+            One of the primary challenges when converting external JSON payloads to Apex is **Reserved Keywords**. External services (written in Node.js, Python, or Go) frequently use property names that are protected, reserved compiler words in Apex.
+        </p>
+        <p>
+            Examples of reserved keywords in Apex include:
+            <code>class</code>, <code>public</code>, <code>private</code>, <code>limit</code>, <code>group</code>, <code>currency</code>, <code>object</code>, <code>sharing</code>, and <code>void</code>.
+        </p>
+        <p>
+            If you try to declare an Apex class variable with these names:
+        </p>
+        <pre class="language-apex"><code>// THIS WILL CAUSE A COMPILER ERROR IN SALESFORCE
+public class ProductInfo {
+    public String name;
+    public String class; // Fatal compiler error: Reserved keyword
+}</code></pre>
+
+        <h3>How json2apex Automatically Sanitizes Keywords</h3>
+        <p>
+            To prevent these compiler failures, json2apex automatically detects reserved terms in your JSON properties and prefixes them with an underscore (e.g. <code>class</code> is written as <code>_class</code>).
+        </p>
+        <p>
+            To successfully deserialize this sanitized property, you can replace the key in the raw JSON string immediately before parsing:
+        </p>
+        <pre class="language-apex"><code>// Pre-deserialize replacement pattern for reserved keywords
+String sanitizedJson = jsonString.replaceAll('"class":', '"_class":');
+MyWrapperClass result = (MyWrapperClass) JSON.deserialize(sanitizedJson, MyWrapperClass.class);</code></pre>
+        <p>
+            Our tool automatically generates this replacement helper logic directly inside your Apex Wrapper class methods if reserved keywords are detected, saving you from writing custom regex maps.
+        </p>
+
+        <h2>Avoiding Common JSON_PARSER_ERRORs</h2>
+        <p>
+            Runtime parsing exceptions are common during Salesforce integrations. Understanding their cause is the best way to prevent them:
+        </p>
+        
+        <h3>1. "JSON_PARSER_ERROR: Expected Array, Got Object"</h3>
+        <p>
+            This error happens when your Apex wrapper declares a property as a List (e.g. <code>List&lt;Product&gt;</code>), but the external API dynamically returns a single JSON object instead of an array.
+        </p>
+        <p>
+            <strong>Fix:</strong> Ensure the external service is configured to always return an array, or parse the property dynamically using <code>JSON.deserializeUntyped()</code> to examine its structure at runtime before mapping it.
+        </p>
+
+        <h3>2. Type Mismatches</h3>
+        <p>
+            If an API payload changes a field dynamically—for example, returning a String (<code>"12.50"</code>) in one request and a Decimal (<code>12.50</code>) in another—Apex's strict typing system will throw a runtime error.
+        </p>
+        <p>
+            <strong>Fix:</strong> Declare variables as standard <code>String</code> or <code>Decimal</code> structures depending on the base API schema. If fields are volatile, parsing them into generic <code>Object</code> formats offers maximum stability.
+        </p>
+
+        <h2>Full Integration Walkthrough & Code Example</h2>
+        <p>
+            Let's review a complete, real-world example mapping an external user detail response.
+        </p>
+
+        <h3>Step 1: The Input JSON Payload</h3>
+        <pre class="language-json"><code>{
+  "id": 1045,
+  "name": "Jane Developer",
+  "email": "jane@example.com",
+  "class": "Premium Tier",
+  "roles": ["Administrator", "Developer"],
+  "meta": {
+    "last_login": "2026-07-17T12:00:00Z",
+    "active": true
+  }
+}</code></pre>
+
+        <h3>Step 2: Generated Apex Wrapper Class</h3>
+        <p>
+            Notice how the reserved keyword <code>class</code> is automatically sanitized to <code>_class</code>, and a custom <code>parse()</code> utility method is included to process the replacement rule:
+        </p>
+        <pre class="language-apex"><code>public class UserResponse {
+
+    public Integer id;
+    public String name;
+    public String email;
+    public String _class; // Sanitized from "class"
+    public List&lt;String&gt; roles;
+    public MetaInfo meta;
+
+    public class MetaInfo {
+        public String last_login;
+        public Boolean active;
+    }
+
+    // Custom parse method that cleans reserved keywords
+    public static UserResponse parse(String jsonStr) {
+        if (jsonStr == null) return null;
+        // Clean keyword
+        String cleanedJson = jsonStr.replaceAll('"class":', '"_class":');
+        return (UserResponse) JSON.deserialize(cleanedJson, UserResponse.class);
+    }
+}</code></pre>
+
+        <h3>Step 3: Generated Unit Test Class</h3>
+        <p>
+            Writing tests in Salesforce is mandatory to move code to production (75% minimum coverage threshold). The test class verifies proper parsing and asserts details:
+        </p>
+        <pre class="language-apex"><code>@isTest
+private class UserResponse_Test {
+
+    @isTest
+    static void testParse() {
+        String jsonStr = '{"id": 1045, "name": "Jane Developer", "email": "jane@example.com", "class": "Premium Tier", "roles": ["Administrator"], "meta": {"last_login": "2026-07-17T12:00:00Z", "active": true}}';
+        
+        Test.startTest();
+        UserResponse obj = UserResponse.parse(jsonStr);
+        Test.stopTest();
+
+        System.assert(obj != null);
+        System.assertEquals(1045, obj.id);
+        System.assertEquals('Jane Developer', obj.name);
+        System.assertEquals('Premium Tier', obj._class);
+        System.assertEquals(true, obj.meta.active);
+    }
+    
+    @isTest
+    static void testParseNull() {
+        UserResponse obj = UserResponse.parse(null);
+        System.assertEquals(null, obj);
+    }
+}</code></pre>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 json2apex. All rights reserved. | 
+        <a href="index.html">Home</a> | 
+        <a href="salesforce-integration-guide.html">Guide</a> | 
+        <a href="about.html">About</a> | 
+        <a href="faq.html">FAQ</a> | 
+        <a href="blog.html">Blog</a> | 
+        <a href="contact.html">Contact Us</a> | 
+        <a href="privacy.html">Privacy Policy</a> | 
+        <a href="terms.html">Terms of Service</a>
+        </p>
+    </footer>
+
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-apex.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" defer></script>
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const currentTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (currentTheme === 'dark' || (!currentTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            darkModeToggle.checked = true;
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>

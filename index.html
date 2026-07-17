@@ -759,6 +759,7 @@
         </div>
         <div class="nav-links">
             <a href="index.html">Home</a>
+            <a href="salesforce-integration-guide.html">Guide</a>
             <a href="about.html">About</a>
             <a href="faq.html">FAQ</a>
             <a href="blog.html">Blog</a>
@@ -971,24 +972,14 @@
             </ul>
         </div>
 
-        <div class="guide-section" style="margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 32px;">
+        <div class="guide-section" style="margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 32px; text-align: center;">
             <h2 style="font-size: 1.6rem; color: var(--primary-color); margin-bottom: 16px;">Salesforce Integration Guide: Apex Wrapper Classes</h2>
-            <p style="font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px;">
-                When building integrations in Salesforce, developers must deserialize JSON payloads returned from web callouts. Using statically typed wrapper classes is the recommended best practice. This approach provides compile-time safety, autocomplete support, and self-documenting code contracts.
+            <p style="font-size: 1.05rem; line-height: 1.6; max-width: 800px; margin: 0 auto 24px auto;">
+                Building robust integrations in Salesforce requires type-safe deserialization of JSON payloads. Learn how to handle Apex reserved keywords, avoid common runtime errors like <code>JSON_PARSER_ERROR</code>, and write reliable unit test mock assertions.
             </p>
-            <p style="font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px;">
-                With <b>json2apex.com</b>, you can automate this boilerplate generation. Simply paste your JSON, specify the class name, and the tool builds the complete parser class alongside a corresponding unit test class with assertions to verify correct serialization/deserialization.
-            </p>
-            
-            <h3 style="font-size: 1.25rem; color: var(--primary-color); margin-top: 24px; margin-bottom: 12px;">Handling Salesforce Reserved Keywords</h3>
-            <p style="font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px;">
-                Apex has reserved keywords (such as <code>class</code>, <code>public</code>, <code>private</code>, or <code>limit</code>) which cannot be used as variable names. If your payload uses these keys, json2apex automatically sanitizes the Apex properties by prefixing them with an underscore (e.g. <code>_class</code>) to prevent compiler failures.
-            </p>
-            
-            <h3 style="font-size: 1.25rem; color: var(--primary-color); margin-top: 24px; margin-bottom: 12px;">Avoiding Common JSON_PARSER_ERRORs</h3>
-            <p style="font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px;">
-                One of the most common issues during deployment is the <i>"JSON_PARSER_ERROR: Expected Array, Got Object"</i>. This happens when the API schema dynamically changes. Statically declared decimal values and list wrappers prevent mismatch exceptions. Always verify your mappings in sandbox environments first.
-            </p>
+            <a href="salesforce-integration-guide.html" class="mdc-button mdc-button--raised" style="background-color: var(--primary-color); text-transform: none; border-radius: 20px; padding: 12px 24px; height: auto;">
+                <span class="mdc-button__label" style="font-size: 1.05rem; font-weight: 500;">Read the Complete Salesforce Integration Guide</span>
+            </a>
         </div>
     </div>
 
@@ -1004,6 +995,7 @@
         Join thousands of devs who've boosted productivity with our tools. Let's build better Salesforce apps together.<br><br>
         &copy; 2026 json2apex. All rights reserved. | 
         <a href="index.html">Home</a> | 
+        <a href="salesforce-integration-guide.html">Guide</a> | 
         <a href="about.html">About</a> | 
         <a href="faq.html">FAQ</a> | 
         <a href="blog.html">Blog</a> | 

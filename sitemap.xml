@@ -43,6 +43,12 @@
         <priority>0.5</priority>
     </url>
     <url>
+        <loc>https://www.json2apex.com/salesforce-integration-guide.html</loc>
+        <lastmod>2026-07-17</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
         <loc>https://www.json2apex.com/blog/understanding-json-apex.html</loc>
         <lastmod>2026-07-17</lastmod>
         <changefreq>monthly</changefreq>
