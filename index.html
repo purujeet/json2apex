@@ -457,6 +457,62 @@
             text-shadow: none !important;
         }
 
+        /* Affiliate Widget */
+        .affiliate-widget {
+            padding: 8px 12px;
+            background-color: rgba(98, 0, 238, 0.04);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12.5px;
+            gap: 12px;
+            transition: background-color 0.3s;
+        }
+
+        [data-theme="dark"] .affiliate-widget {
+            background-color: rgba(187, 134, 252, 0.04);
+        }
+
+        .affiliate-widget-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-color);
+            line-height: 1.4;
+        }
+
+        .affiliate-widget-text i {
+            color: var(--primary-color);
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .affiliate-widget-btn {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            text-decoration: none;
+            text-transform: none;
+            height: auto;
+            line-height: 1.5;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+        }
+
+        .affiliate-widget-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
+            background-color: var(--primary-dark) !important;
+        }
+
         /* Status Bar */
         .editor-statusbar {
             display: flex;
@@ -890,6 +946,17 @@
                     <div id="jsonTreeViewer" class="editor-textarea" style="display: none; overflow: auto;"></div>
                 </div>
 
+                <!-- Amazon Affiliate Link Widget -->
+                <div class="affiliate-widget">
+                    <div class="affiliate-widget-text">
+                        <i class="material-icons">menu_book</i>
+                        <span><strong>Recommended Guide:</strong> Master architecture design with the book <em>Salesforce Architect's Handbook</em>. Checkout on Amazon!</span>
+                    </div>
+                    <a href="https://link.amazon/B0bRmwh7e" target="_blank" rel="noopener noreferrer" class="affiliate-widget-btn">
+                        View on Amazon <i class="material-icons" style="font-size: 14px; margin-left: 2px;">open_in_new</i>
+                    </a>
+                </div>
+
                 <div class="editor-statusbar">
                     <div class="status-item" id="jsonStatus">
                         <span class="status-success">✓ Valid JSON</span>
@@ -936,6 +1003,17 @@
                     <div id="testOutputContainer" style="display: none;">
                         <pre id="testOutput" class="editor-pre language-apex line-numbers"><code class="language-apex"></code></pre>
                     </div>
+                </div>
+
+                <!-- Amazon Affiliate Link Widget (Right Pane) -->
+                <div class="affiliate-widget">
+                    <div class="affiliate-widget-text">
+                        <i class="material-icons">menu_book</i>
+                        <span><strong>Recommended Resource:</strong> Master Salesforce Apex testing & enterprise patterns. Checkout this top guide on Amazon!</span>
+                    </div>
+                    <a href="https://link.amazon/B0h2DlUgK" target="_blank" rel="noopener noreferrer" class="affiliate-widget-btn">
+                        View on Amazon <i class="material-icons" style="font-size: 14px; margin-left: 2px;">open_in_new</i>
+                    </a>
                 </div>
 
                 <div class="editor-statusbar">
