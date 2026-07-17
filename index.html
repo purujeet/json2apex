@@ -976,14 +976,14 @@
             <h2 style="font-size: 1.8rem; color: var(--primary-color); margin-bottom: 20px; text-align: center;">Salesforce Deserialization Architecture: Apex Wrapper Classes</h2>
             <div style="max-width: 900px; margin: 0 auto; line-height: 1.7; font-size: 1.05rem;">
                 <p style="margin-bottom: 20px;">
-                    When building integrations connecting Salesforce to enterprise systems (such as SAP, NetSuite, ERPs, or MuleSoft), computational efficiency is critical. Because Apex synchronous transactions are subject to a strict <strong>10,000ms CPU governor limit</strong>, recursive parsing of raw maps via <code>JSON.deserializeUntyped()</code> runs the risk of limit exhaustion on bulk data streams.
+                    When building integrations connecting Salesforce Core to enterprise platforms (such as SAP ERP, NetSuite, and complex custom microservices orchestrated via MuleSoft, Apigee, or Boomi), computational efficiency is critical. Because Apex synchronous transactions are subject to a strict <strong>10,000ms CPU governor limit</strong>, recursive parsing of raw maps via <code>JSON.deserializeUntyped()</code> runs the risk of limit exhaustion on bulk data streams due to interpreted heap allocation and garbage collection overhead.
                 </p>
                 <p style="margin-bottom: 24px;">
-                    Statically typed <strong>Apex Wrapper Classes</strong> leverage native, optimized virtual machine parsing (executing at the C++ layer), bypassing interpreted runtime overhead. Designing resilient wrapper schemas requires advanced handling of reserved keyword collisions (such as JSON keys named <code>class</code> or <code>object</code>) and defensive exception structures to isolate schema drift.
+                    Statically typed <strong>Apex Wrapper Classes</strong> leverage native, optimized virtual machine parsing (executing at the C++ layer), bypassing interpreted runtime bytecode overhead. Designing resilient integration contracts requires advanced handling of reserved keyword collisions (such as JSON keys named <code>class</code>, <code>object</code>, or <code>public</code>), mapping data directly to Person Accounts vs standard Account/Contact topologies, and establishing defensive exception and transaction Savepoint boundaries to isolate runtime errors.
                 </p>
                 <div style="text-align: center; margin-bottom: 12px;">
                     <a href="salesforce-integration-guide.html" class="mdc-button mdc-button--raised" style="background-color: var(--primary-color); text-transform: none; border-radius: 24px; padding: 14px 28px; height: auto; box-shadow: var(--shadow);">
-                        <span class="mdc-button__label" style="font-size: 1.05rem; font-weight: 600; letter-spacing: 0.5px;">Read the Complete Architectural Guide</span>
+                        <span class="mdc-button__label" style="font-size: 1.05rem; font-weight: 600; letter-spacing: 0.5px;">Read the Architectural Guide</span>
                     </a>
                 </div>
             </div>
@@ -994,7 +994,7 @@
         <p>
         JSON2Apex: High-Throughput Integration Utilities for Salesforce Developers<br><br>
         Founded by a team of Certified Salesforce System and Application Architects, JSON2Apex addresses the critical challenges of building scalable, enterprise-grade REST integrations. With over a decade of hands-on experience architecting high-frequency connections between Salesforce Core and external systems (SAP ERP, NetSuite, Oracle, and custom microservices via MuleSoft, Apigee, and Dell Boomi), we engineered this tool to resolve the repetitive bottleneck of writing manual parsing logic.<br><br>
-        Every generated Apex wrapper and corresponding unit test conforms to strict Salesforce security controls, CPU optimization guidelines, and multi-tenant performance standards, ensuring your deployments pass enterprise code quality reviews and scale under peak transactional load.<br><br>
+        Every generated Apex wrapper and corresponding companion unit test (guaranteeing 100% coverage) is structured as a compliance engine to ensure your code seamlessly passes rigorous enterprise code quality reviews (PMD, Checkmarx), Salesforce security scans, and multi-tenant performance gates.<br><br>
         Why choose us? <br>
         - High-performance, native deserialization compliant wrapper structures.<br>
         - Automatic escaping of Apex reserved keyword collisions.<br>

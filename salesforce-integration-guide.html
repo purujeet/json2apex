@@ -4,9 +4,9 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236200ee;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%233700b3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='25' fill='url(%23grad)'/%3E%3Ctext x='50' y='64' font-family='monospace' font-size='38' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EJ2A%3C/text%3E%3C/svg%3E">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salesforce Deserialization Architecture: Apex Wrapper Design Patterns | json2apex</title>
-    <meta name="description" content="Deep architectural analysis of Salesforce Apex JSON deserialization, governor limits under multi-tenant environments, reserved keyword mapping strategies, and managing dynamic payloads.">
-    <meta name="keywords" content="Salesforce Integration Architecture, Apex Wrapper Class, JSON Deserialization Performance, Salesforce Governor Limits, JSON_PARSER_ERROR, Apex callout design, SAP MuleSoft integration">
+    <title>Salesforce Deserialization Architecture: Apex Wrapper Design Patterns & Performance Optimization | json2apex</title>
+    <meta name="description" content="In-depth technical analysis of Salesforce Apex JSON deserialization execution paths, governor limit complexities, keyword collisions, and Person Account DML mappings.">
+    <meta name="keywords" content="Salesforce Integration Architecture, Apex Wrapper Class, JSON Deserialization Performance, Salesforce Governor Limits, Person Account DML, Savepoint Rollback, SAP NetSuite MuleSoft integration">
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
@@ -132,7 +132,7 @@
         }
 
         .content-section {
-            max-width: 960px;
+            max-width: 1000px;
             margin: 32px auto;
             padding: 40px;
             background-color: var(--container-bg);
@@ -143,7 +143,7 @@
         }
 
         .content-section h2 {
-            font-size: 1.7rem;
+            font-size: 1.75rem;
             margin-top: 36px;
             margin-bottom: 16px;
             color: var(--primary-color);
@@ -152,7 +152,7 @@
         }
 
         .content-section h3 {
-            font-size: 1.3rem;
+            font-size: 1.35rem;
             margin-top: 28px;
             margin-bottom: 12px;
             color: var(--primary-color);
@@ -250,196 +250,229 @@
 
     <header class="hero-section">
         <h1>Salesforce Deserialization Architecture</h1>
-        <p>A Senior Architect's guide to building high-performance, type-safe integration contracts in Salesforce Apex.</p>
+        <p>A masterclass on runtime memory dynamics, keyword sanitization, and high-integrity DML transaction boundaries in Apex.</p>
     </header>
 
     <div class="content-section">
-        <h2>Apex Deserialization in Multi-Tenant Environments</h2>
+        <h2>Native VM Execution vs. Interpreted Map Traversal</h2>
         <p>
-            In Salesforce's multi-tenant architecture, CPU time is one of the most strictly enforced governor limits. A single synchronous transaction is capped at <strong>10,000 milliseconds of CPU execution time</strong>. When building integrations connecting Salesforce to enterprise systems like SAP, Workday, or MuleSoft, parsing large, deeply nested JSON payloads efficiently becomes a critical design challenge.
+            In Salesforce's multi-tenant architecture, CPU execution time is one of the most strictly policed governor limits. A single synchronous transaction is restricted to exactly <strong>10,000 milliseconds of CPU execution time</strong>. When building integrations connecting Salesforce Core to enterprise platforms (such as SAP ERP, NetSuite, or legacy database layers via middleware like MuleSoft, Apigee, or Dell Boomi), parsing high-frequency or high-volume JSON streams efficiently is a fundamental engineering requirement.
         </p>
         <p>
-            When deserializing payload data, developers face a choice between two main mechanisms:
-        </p>
-        
-        <h3>1. Native Type-Safe Deserialization (Recommended)</h3>
-        <p>
-            Using <code>JSON.deserialize(jsonString, WrapperClass.class)</code> compiles the JSON payload directly into a strongly typed instance of an Apex class. Because the mapping occurs within Salesforce's underlying container layer (executed at the native virtual machine layer in C++), it bypasses the interpreter overhead of Apex. This makes typed deserialization exponentially faster and highly CPU-efficient, particularly for payloads exceeding several megabytes or containing extensive arrays.
+            The Salesforce platform processes JSON deserialization using two completely different runtime execution paths:
         </p>
 
-        <h3>2. Untyped Deserialization</h3>
+        <h3>1. Native VM-Level Deserialization</h3>
         <p>
-            Using <code>JSON.deserializeUntyped(jsonString)</code> returns a generic <code>Map&lt;String, Object&gt;</code> structure. Navigating this structure requires recursive key lookup and runtime type-casting (e.g., casting elements to nested maps or lists of objects). Traversing this tree in interpreted Apex consumes significant CPU cycles, rapidly eating into transaction limits and risking <em>"System.LimitException: Apex CPU time limit exceeded"</em> errors during bulk operations.
+            When invoking <code>JSON.deserialize(jsonString, WrapperClass.class)</code>, the Salesforce engine hands execution over to the platform's core container layer. Lexical scanning, tokenizing, and type-safe schema validation occur within the <strong>underlying C++ runtime VM layer</strong>. Executed close to bare metal, this native compilation bypasses interpreted Apex bytecode translation entirely. Type-safe deserialization runs exponentially faster than interpreted alternatives, allowing multi-megabyte payloads to map to structured objects in milliseconds.
         </p>
 
-        <div class="info-box">
-            <p><strong>Architectural Best Practice:</strong> Define rigid, type-safe Wrapper Classes for integration payloads. Reserve untyped parsing solely for dynamic configurations, variable schema headers, or metadata-driven integrations where the payload structure cannot be predicted at compile time.</p>
-        </div>
-
-        <h2>Technical Debt & Enterprise Maintenance Overhead</h2>
+        <h3>2. Interpreted Map Traversal</h3>
         <p>
-            Beyond performance, the choice between typed wrappers and untyped maps impacts the maintenance cost of enterprise codebases:
+            Conversely, calling <code>JSON.deserializeUntyped(jsonString)</code> returns a generic <code>Map&lt;String, Object&gt;</code>. To map this untyped structure to functional objects, developers must write recursive loop structures in interpreted Apex. 
+        </p>
+        <p>
+            Let $N$ represent the total key count and $D$ represent the depth of nesting. While the theoretical lookup complexity is $O(N)$, the real computational bottleneck lies in <strong>heap references and type-casting execution</strong>. Every dynamic lookup (e.g., <code>(Map&lt;String, Object&gt;) payload.get('subNode')</code>) generates temporary heap variables. In a high-throughput transaction:
         </p>
         <ul>
-            <li><strong>Compile-Time Validation vs. Silent Failures:</strong> With untyped maps, variable references are hardcoded as string literals (e.g., <code>(String)payloadMap.get('accountEmail')</code>). If an upstream API changes the property name to <code>emailAddress</code>, the code compiles successfully, but fails silently at runtime, resulting in null values and data corruption. With a wrapper class, renaming a field immediately breaks compilation, allowing developers to catch and fix mapping errors during the build stage.</li>
-            <li><strong>Refactoring and Autocomplete:</strong> Wrapper classes provide explicit code contracts. IDEs like VS Code can instantly trace field usage across classes, trigger handlers, and batch utilities. In contrast, finding string-literal map queries spread across thousands of lines of legacy code requires risk-prone regex searches.</li>
-            <li><strong>Self-Documenting Schema:</strong> Apex wrappers serve as living API documentation. A new developer can read the wrapper class structure to immediately understand the external API contract without needing to consult stale external documentation.</li>
+            <li>Frequent heap allocation triggers the **Apex Garbage Collector** recursively within the shared multi-tenant memory pool.</li>
+            <li>Bytecode interpretation and casting operations add heavy CPU instruction overhead.</li>
+            <li>Memory thrashing rapidly consumes CPU time, resulting in a <code>LimitException: Apex CPU time limit exceeded</code> long before the 10,000ms threshold of business logic execution is met.</li>
         </ul>
 
-        <h2>Handling Advanced Edge Cases & Keyword Collisions</h2>
+        <div class="info-box">
+            <p><strong>Architectural Blueprint:</strong> Statically typed Apex wrapper classes act as optimized machine instructions. By using type-safe serialization contracts generated by <strong>json2apex</strong>, you shift computational load from interpreted Apex bytecode to native C++ VM execution, freeing CPU capacity for downstream triggers and database operations.</p>
+        </div>
+
+        <h2>Technical Debt & Enterprise Maintenance Cost</h2>
         <p>
-            One of the primary challenges when converting external payloads is keyword collisions. Systems written in languages like JavaScript, Go, or Python frequently use property names that are reserved keywords in Salesforce Apex.
+            Using generic untyped map structures across enterprise systems represents significant technical debt. If an external billing service changes a JSON key from <code>"balance"</code> to <code>"outstandingBalance"</code>:
+        </p>
+        <ul>
+            <li><strong>Silent Mapping Failures:</strong> Untyped map code compiles without error. However, at runtime, <code>payloadMap.get('balance')</code> returns <code>null</code>, causing silent database errors, incorrect calculations, or empty fields.</li>
+            <li><strong>Compile-Time Safety:</strong> With a typed wrapper class, the variable mappings are validated during build/deployment. Renaming a field immediately throws a compiler error, ensuring the integration bug is caught before reaching production.</li>
+            <li><strong>Static Analysis Compliance:</strong> Modern enterprise quality gates enforce tools like PMD, SonarQube, and Checkmarx. Hardcoded string keys in maps violate secure coding standards and fail static analysis rules, whereas explicit wrapper schemas ensure clean compliance passing.</li>
+        </ul>
+
+        <h2>Managing Dynamic Payloads and Schema Drift</h2>
+        <p>
+            In production integrations, external schemas are rarely static. A third-party API might return an array of items under normal operation, but substitute a single error object during downtime. A strict type-safe class throws a runtime <code>JSON_PARSER_ERROR</code> and crashes the execution thread when it encounters such variance.
         </p>
         <p>
-            Since variable declarations in Apex cannot use reserved keywords, declaring them directly leads to immediate compiler failures:
+            A resilient integration architecture uses a **Hybrid Fallback Pattern**. In this configuration, volatile JSON segments are mapped to generic <code>Object</code> variables inside the wrapper, allowing Apex to parse them as raw objects without crashing. If an exception occurs, the system logs the schema drift details and rolls back database updates cleanly:
         </p>
 
-        <table class="keyword-table">
-            <thead>
-                <tr>
-                    <th>JSON Key</th>
-                    <th>Apex Variable Target</th>
-                    <th>Status</th>
-                    <th>Result</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><code>"class"</code></td>
-                    <td><code>public String class;</code></td>
-                    <td><strong style="color: var(--error-color);">Invalid</strong></td>
-                    <td>Fatal compiler error (Reserved keyword)</td>
-                </tr>
-                <tr>
-                    <td><code>"object"</code></td>
-                    <td><code>public String object;</code></td>
-                    <td><strong style="color: var(--error-color);">Invalid</strong></td>
-                    <td>Fatal compiler error (Reserved keyword)</td>
-                </tr>
-                <tr>
-                    <td><code>"class"</code></td>
-                    <td><code>public String _class;</code></td>
-                    <td><strong style="color: var(--success-color);">Valid</strong></td>
-                    <td>Compiles successfully (Sanitized name)</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <h3>The Regex Key-Replacement Strategy</h3>
-        <p>
-            Unlike languages like Java (which use annotations like Jackson's <code>@JsonProperty("class")</code> to map variables), Apex does not natively support property aliasing during standard deserialization. 
-        </p>
-        <p>
-            The most CPU-efficient strategy to handle this limitation consists of a **pre-deserialization regex replace** on the raw JSON string before sending it to the parser. By searching for the exact JSON key signature (e.g., <code>"class":</code> or <code>"object":</code>) and replacing it with a sanitized version (e.g., <code>"_class":</code> or <code>"_object":</code>), the deserialization engine can execute natively without throwing exceptions:
-        </p>
-
-        <pre class="language-apex"><code>// Native replacement logic wrapper method inside the parsed class
-public static UserResponse parse(String jsonString) {
-    if (jsonString == null) return null;
-    
-    // Replace reserved keywords with sanitized variables
-    String sanitized = jsonString
-        .replaceAll('"(class)":', '"_class":')
-        .replaceAll('"(object)":', '"_object":')
-        .replaceAll('"(limit)":', '"_limit":');
+        <pre class="language-apex"><code>// Defensive Try-Catch and Logging Fallback Pattern
+public static UserDetail safeParse(String jsonBody) {
+    try {
+        return UserDetail.parse(jsonBody);
+    } catch (JSONException parseEx) {
+        // Publish Platform Event or write to an integration log custom object
+        IntegrationLog__c errLog = new IntegrationLog__c(
+            Service__c = 'UserSyncService',
+            Status__c = 'Failed',
+            ErrorMsg__c = parseEx.getMessage(),
+            Payload__c = jsonBody.abbreviate(131072)
+        );
+        insert errLog;
         
-    return (UserResponse) JSON.deserialize(sanitized, UserResponse.class);
+        // Return a boundary object indicating parse failure
+        UserDetail failWrapper = new UserDetail();
+        failWrapper.hasParseError = true;
+        return failWrapper;
+    }
 }</code></pre>
 
-        <h2>Architecting for Dynamic Payloads & Schema Drift</h2>
+        <h2>Data Integrity & Transactional Boundaries: Person Accounts vs. Standard Topologies</h2>
         <p>
-            What happens when an external API introduces dynamic objects or varying node types (Schema Drift)? If a property returns an array of records in one scenario but a single error object in another, standard typed deserialization will throw a <code>JSON_PARSER_ERROR</code> and halt execution.
-        </p>
-        <p>
-            To build resilient integrations, implement a **Hybrid Deserialization Pattern**. This combines type-safe wrappers for core properties with untyped maps for volatile segments, wrapped in structured exception handling:
+            When deserializing integration data to map into Salesforce records, architects must account for target object models. This is particularly critical when choosing between standard Account/Contact topologies and Salesforce **Person Accounts**:
         </p>
 
-        <pre class="language-apex"><code>public class ResilientParser {
+        <h3>1. Standard Account/Contact Topology</h3>
+        <p>
+            Standard enterprise records are split across two objects. The wrapper class maps variables to <code>Account</code> and <code>Contact</code> properties separately. Programmatically, you insert the Account first, retrieve the generated <code>AccountId</code>, assign it to the Contact's parent field, and perform the second insert.
+        </p>
 
-    public String status;
-    public String message;
-    public Object dynamicPayload; // Handled as generic Object to prevent type crashes
+        <h3>2. Person Account Topology</h3>
+        <p>
+            Person Accounts merge Account and Contact fields into a single record. Attempting to assign standard Contact properties to a standard Account record will throw a DML exception. Additionally, Person Accounts require explicit **Record Type Configuration**.
+        </p>
+        <p>
+            To safely handle this mapping:
+        </p>
+        <ul>
+            <li>**Query RecordType:** Query the Business/Person Account Record Type ID dynamically via schema describes:
+                <pre class="language-apex"><code>Id personAccountRtId = Schema.SObjectType.Account.getRecordTypeInfosByDeveloperName()
+    .get('PersonAccount')
+    .getRecordTypeId();</code></pre>
+            </li>
+            <li>**Prevent Field Collisions:** You cannot populate standard Account fields (like <code>Name</code>) and Person Account fields (like <code>FirstName</code>/<code>LastName</code>) simultaneously. The wrapper must direct Contact-specific fields to their Person Account equivalents (e.g., standard email field maps to <code>PersonEmail</code>).</li>
+            <li>**Transactional Savepoints:** If your integration maps a JSON array to insert both parent Accounts and child Cases, a failure in the Case insertion must not leave orphan Accounts. Use **Savepoints** to wrap the entire transaction boundary:
+                <pre class="language-apex"><code>// Savepoint boundary control
+Savepoint sp = Database.setSavepoint();
+try {
+    insert accountsToInsert;
+    insert casesToInsert;
+} catch (DmlException dmlEx) {
+    Database.rollback(sp); // Complete rollback ensures no partial commits
+    IntegrationLogUtility.logError('DML_Failure', dmlEx.getMessage());
+}</code></pre>
+            </li>
+        </ul>
 
-    public static ResilientParser safeParse(String jsonBody) {
+        <h2>Production-Grade Integration Blueprint</h2>
+        <p>
+            The following template shows an enterprise-ready implementation combining strict keyword sanitization, transaction savepoint recovery, Person Account Record Type mapping, and robust unit testing.
+        </p>
+
+        <h3>1. Custom Exception Class (IntegrationException.cls)</h3>
+        <pre class="language-apex"><code>public class IntegrationException extends Exception {}</code></pre>
+
+        <h3>2. Sanitized Wrapper Class (UserPayload.cls)</h3>
+        <pre class="language-apex"><code>public class UserPayload {
+    public Integer externalId;
+    public String firstName;
+    public String lastName;
+    public String emailAddress;
+    public String _class; // Escaped from reserved key "class"
+    public String _object; // Escaped from reserved key "object"
+    
+    // Flag to handle defensive hybrid state
+    public Boolean hasParseError = false;
+
+    public static UserPayload parse(String jsonString) {
+        if (jsonString == null) {
+            throw new IntegrationException('Null payload supplied to parser.');
+        }
+        
+        // Perform pre-deserialization replacements for reserved words
+        String sanitized = jsonString;
+        sanitized = sanitized.replaceAll('"(class)":', '"_class":');
+        sanitized = sanitized.replaceAll('"(object)":', '"_object":');
+        
+        return (UserPayload) JSON.deserialize(sanitized, UserPayload.class);
+    }
+}</code></pre>
+
+        <h3>3. DML Service Handler Class (UserIntegrationService.cls)</h3>
+        <pre class="language-apex"><code>public class UserIntegrationService {
+
+    public static void syncUserRecord(String rawPayload) {
+        // 1. Parse wrapper defensively
+        UserPayload payload;
         try {
-            // Attempt standard type-safe deserialization
-            return (ResilientParser) JSON.deserialize(jsonBody, ResilientParser.class);
-        } catch (JSONException e) {
-            // Log target deserialization failures to a custom Integration Log object
-            IntegrationLogUtility.logError('API_Schema_Drift', e.getMessage(), jsonBody);
+            payload = UserPayload.parse(rawPayload);
+        } catch (Exception ex) {
+            throw new IntegrationException('JSON parsing failed: ' + ex.getMessage());
+        }
+
+        // 2. Establish transaction boundary
+        Savepoint transactionSavepoint = Database.setSavepoint();
+        
+        try {
+            // Retrieve Person Account Record Type dynamically
+            Id personAccountRecordTypeId = Schema.SObjectType.Account.getRecordTypeInfosByDeveloperName()
+                .get('PersonAccount')
+                .getRecordTypeId();
             
-            // Fall back to a safe untyped parser to extract diagnostics
-            Map&lt;String, Object&gt; untyped = (Map&lt;String, Object&gt;) JSON.deserializeUntyped(jsonBody);
-            ResilientParser fallback = new ResilientParser();
-            fallback.status = 'Error';
-            fallback.message = 'Schema Drift Detected: ' + e.getMessage();
-            return fallback;
+            // Map wrapper to Person Account fields
+            Account personAcc = new Account();
+            personAcc.RecordTypeId = personAccountRecordTypeId;
+            personAcc.FirstName = payload.firstName;
+            personAcc.LastName = payload.lastName;
+            personAcc.PersonEmail = payload.emailAddress;
+            personAcc.External_ID__c = String.valueOf(payload.externalId);
+            personAcc.Membership_Tier__c = payload._class; // Mapping escaped keyword
+            
+            // Perform DML
+            upsert personAcc External_ID__c;
+            
+        } catch (DmlException dmlEx) {
+            // Roll back the entire transaction to prevent partial state corruption
+            Database.rollback(transactionSavepoint);
+            throw new IntegrationException('Database transaction rolled back. Reason: ' + dmlEx.getDmlMessage(0));
         }
     }
 }</code></pre>
 
-        <h2>Complete Implementation Blueprint</h2>
-        <p>
-            Below is a full production-ready template showing a sanitized wrapper class along with a robust unit test class that mocks integrations and covers all edge cases.
-        </p>
-
-        <h3>1. The Cleaned Apex Wrapper Class (UserDetail.cls)</h3>
-        <pre class="language-apex"><code>public class UserDetail {
-
-    public Integer id;
-    public String username;
-    public String _class; // Sanitized from reserved key "class"
-    public String _object; // Sanitized from reserved key "object"
-    public Meta meta;
-
-    public class Meta {
-        public String createdDate;
-        public Boolean isActive;
-    }
-
-    public static UserDetail parse(String jsonStr) {
-        if (jsonStr == null) return null;
-        
-        // Escape reserved keywords safely with string replacements
-        String sanitized = jsonStr;
-        sanitized = sanitized.replaceAll('"(class)":', '"_class":');
-        sanitized = sanitized.replaceAll('"(object)":', '"_object":');
-        
-        return (UserDetail) JSON.deserialize(sanitized, UserDetail.class);
-    }
-}</code></pre>
-
-        <h3>2. The Companion Test Class (UserDetail_Test.cls)</h3>
-        <p>
-            Salesforce requires code coverage to deploy code to production. This test class verifies both positive parsing flow, reserved keyword sanitization, and null boundary cases.
-        </p>
+        <h3>4. Robust Unit Test & Mocking Class (UserIntegrationService_Test.cls)</h3>
         <pre class="language-apex"><code>@isTest
-private class UserDetail_Test {
+private class UserIntegrationService_Test {
 
     @isTest
-    static void testParseValidPayload() {
-        // Raw JSON input with reserved keywords
-        String jsonPayload = '{"id": 9901, "username": "salesforce_dev", "class": "Enterprise", "object": "UserRecord", "meta": {"createdDate": "2026-07-17", "isActive": true}}';
+    static void testSuccessfulSync() {
+        // Raw JSON input targeting Person Account fields and including reserved keywords
+        String rawJson = '{"externalId": 7741, "firstName": "John", "lastName": "Doe", "emailAddress": "john.doe@example.com", "class": "Vip Tier", "object": "AccountObject"}';
         
         Test.startTest();
-        UserDetail result = UserDetail.parse(jsonPayload);
+        UserIntegrationService.syncUserRecord(rawJson);
         Test.stopTest();
         
-        // Perform structural assertions
-        System.assertNotEquals(null, result, 'Failed to parse JSON string.');
-        System.assertEquals(9901, result.id, 'Id field mismatch.');
-        System.assertEquals('Enterprise', result._class, 'Sanitized class property mismatch.');
-        System.assertEquals('UserRecord', result._object, 'Sanitized object property mismatch.');
-        System.assertEquals(true, result.meta.isActive, 'Nested boolean mapping mismatch.');
+        // Assert record creation in database
+        Account createdAcc = [SELECT FirstName, LastName, PersonEmail, Membership_Tier__c FROM Account WHERE External_ID__c = '7741' LIMIT 1];
+        System.assertEquals('John', createdAcc.FirstName);
+        System.assertEquals('Doe', createdAcc.LastName);
+        System.assertEquals('john.doe@example.com', createdAcc.PersonEmail);
+        System.assertEquals('Vip Tier', createdAcc.Membership_Tier__c);
     }
 
     @isTest
-    static void testParseNullPayload() {
+    static void testSyncFailureAndRollback() {
+        // Payload missing required fields to trigger a DML failure (e.g. LastName is null on Account)
+        String rawJson = '{"externalId": 7742, "firstName": "John", "lastName": null, "emailAddress": "john.doe@example.com"}';
+        
         Test.startTest();
-        UserDetail result = UserDetail.parse(null);
+        try {
+            UserIntegrationService.syncUserRecord(rawJson);
+            System.assert(false, 'Expected IntegrationException was not thrown.');
+        } catch (IntegrationException ex) {
+            System.assert(ex.getMessage().contains('Database transaction rolled back'), 'Unexpected exception: ' + ex.getMessage());
+        }
         Test.stopTest();
         
-        System.assertEquals(null, result, 'Null payload should return null object.');
+        // Verify database rolled back completely and no orphan record exists
+        List&lt;Account&gt; accounts = [SELECT Id FROM Account WHERE External_ID__c = '7742'];
+        System.assertEquals(0, accounts.size(), 'Transaction failed to roll back.');
     }
 }</code></pre>
     </div>
