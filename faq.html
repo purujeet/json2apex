@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236200ee;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%233700b3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='25' fill='url(%23grad)'/%3E%3Ctext x='50' y='64' font-family='monospace' font-size='38' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EJ2A%3C/text%3E%3C/svg%3E">
@@ -232,25 +193,60 @@
 
     <section class="content-section">
         <h2>Frequently Asked Questions (FAQ)</h2>
+        
         <div class="faq-item">
-            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">What is a JSON formatter and why do I need one?</div>
-            <div class="faq-answer">A JSON formatter prettifies minified or messy JSON code by adding indentation, line breaks, and structure. It's essential for debugging APIs, reading config files, or sharing data—making complex objects human-readable without errors.</div>
+            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">What is a JSON to Apex Converter and why do Salesforce developers need it?</div>
+            <div class="faq-answer">A JSON to Apex converter is a utility that parses a JSON (JavaScript Object Notation) payload and automatically generates the corresponding Salesforce Apex wrapper class. When developing API integrations, Salesforce Apex requires strongly typed variables to deserialize and work with incoming JSON payloads. Writing these wrapper classes manually (especially for large, nested JSON structures) is tedious, repetitive, and prone to formatting errors. This tool automates the creation of clean, robust Apex class structures and companion test classes, saving developers hours of manual coding.</div>
         </div>
+
         <div class="faq-item">
-            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">Is json2apex really free and secure?</div>
-            <div class="faq-answer">Yes! Our tool is 100% free with no sign-ups or limits. All processing happens in your browser, so your data never leaves your device—perfect for sensitive API responses or private projects.</div>
+            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">How does json2apex map JSON data types to Apex data types?</div>
+            <div class="faq-answer">Our generator analyzes the structure and values of your JSON input to apply type-safe mappings:
+                <ul>
+                    <li><strong>Strings:</strong> Mapped directly to <code>String</code>.</li>
+                    <li><strong>Numbers (Integers):</strong> If a numeric value has no decimal part, it maps to <code>Integer</code>.</li>
+                    <li><strong>Numbers (Decimals):</strong> If a numeric value contains a decimal portion, it maps to <code>Decimal</code> to preserve mathematical precision.</li>
+                    <li><strong>Booleans:</strong> Mapped to <code>Boolean</code>.</li>
+                    <li><strong>Nulls:</strong> Defaults to <code>Object</code> since the exact type cannot be inferred from a null value.</li>
+                    <li><strong>Objects:</strong> Converted into a nested public class inside the wrapper, or maps to a generic <code>Map&lt;String, Object&gt;</code> if it represents a dynamic dictionary.</li>
+                    <li><strong>Arrays/Lists:</strong> Mapped to <code>List&lt;T&gt;</code>, where <code>T</code> is the inferred type of the array elements.</li>
+                </ul>
+            </div>
         </div>
+
         <div class="faq-item">
-            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">How does the JSON to Apex converter work?</div>
-            <div class="faq-answer">Our converter parses your JSON input, generates structured Apex classes with appropriate data types, and creates corresponding test classes to ensure Salesforce compatibility. It supports nested objects and arrays, with optional parse methods.</div>
+            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">How does the tool handle Salesforce reserved keywords in JSON keys?</div>
+            <div class="faq-answer">Salesforce Apex has reserved keywords like <code>class</code>, <code>public</code>, <code>private</code>, <code>currency</code>, <code>object</code>, <code>char</code>, etc. If your incoming JSON has a key that is a reserved keyword (e.g., <code>"class": "Premium"</code>), Apex will throw a syntax compilation error if you try to declare <code>public String class;</code>.
+            To solve this, json2apex automatically sanitizes keys by prepending them with a leading underscore (e.g., <code>_class</code>).
+            <br><br>
+            <strong>Pro-Tip:</strong> To deserialize these fields correctly in Salesforce, you can either perform a string replacement of the reserved keys before deserializing (e.g., <code>jsonString.replace('"class":', '"_class":')</code>) or use Apex's native <code>System.JSON.deserializeUntyped()</code> to parse the payload dynamically.</div>
         </div>
+
         <div class="faq-item">
-            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">Can I use this for large JSON files?</div>
-            <div class="faq-answer">Absolutely. Handle files up to several MB with our efficient parser. For massive datasets, ensure your JSON is valid to avoid performance issues.</div>
+            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">What is the difference between typed deserialization and untyped deserialization in Apex?</div>
+            <div class="faq-answer">
+                <ul>
+                    <li><strong>Typed Deserialization:</strong> Uses <code>System.JSON.deserialize(jsonString, ApexClassName.class)</code>. It compiles the JSON payload directly into an instance of your Apex wrapper class. This is type-safe, easy to read, and provides autocomplete support in your IDE.</li>
+                    <li><strong>Untyped Deserialization:</strong> Uses <code>System.JSON.deserializeUntyped(jsonString)</code>. This parses the JSON into a generic <code>Map&lt;String, Object&gt;</code>. It is highly flexible and useful for handling dynamic JSON keys or schemas that change frequently, but it requires manual type casting (e.g., <code>(String)myMap.get('name')</code>) and does not compile-time validate the fields.</li>
+                </ul>
+            </div>
         </div>
+
         <div class="faq-item">
-            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">What makes json2apex better than other tools?</div>
-            <div class="faq-answer">Unlike basic converters, we generate both Apex classes and test classes, support complex JSON structures, and offer features like file uploads and dark mode in a user-friendly, ad-free interface.</div>
+            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">How do I handle dynamic or unpredictable JSON keys in Apex wrapper classes?</div>
+            <div class="faq-answer">If your JSON payloads contain unpredictable keys (such as user IDs or product codes as top-level keys, e.g. <code>{"12345": {"name": "Product A"}}</code>), static wrapper properties will fail to compile. In these scenarios, you should parse the payload using <code>JSON.deserializeUntyped()</code>. You can then cast the result to <code>Map&lt;String, Object&gt;</code> and iterate over the keys dynamically using the map's <code>keySet()</code> method.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">Does the converter generate unit test classes? How do I write HTTP mock callouts?</div>
+            <div class="faq-answer">Yes! json2apex generates both the class structure and a corresponding <code>@isTest</code> unit test class. The generated test class sets up the JSON mock string, invokes the deserializer, and asserts that the parsed wrapper instance is not null.
+            <br><br>
+            To mock HTTP responses for integrations in your tests, implement the <code>HttpCalloutMock</code> interface. In your mock class, you can instantiate the wrapper, populate it with test data, and serialize it back to JSON using <code>JSON.serialize(wrapperObj)</code> to form the HTTP response body.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="this.nextElementSibling.classList.toggle('show')">Is my JSON data secure when using json2apex.com?</div>
+            <div class="faq-answer">Absolutely. Your privacy and security are our highest priorities. All JSON validation, parsing, and Apex code generation take place entirely client-side in your local web browser using JavaScript. No JSON inputs or generated Apex classes are sent to our servers, nor do we store any integration payloads on our database. You can even run this website fully offline.</div>
         </div>
     </section>
 
