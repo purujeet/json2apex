@@ -972,27 +972,34 @@
             </ul>
         </div>
 
-        <div class="guide-section" style="margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 32px; text-align: center;">
-            <h2 style="font-size: 1.6rem; color: var(--primary-color); margin-bottom: 16px;">Salesforce Integration Guide: Apex Wrapper Classes</h2>
-            <p style="font-size: 1.05rem; line-height: 1.6; max-width: 800px; margin: 0 auto 24px auto;">
-                Building robust integrations in Salesforce requires type-safe deserialization of JSON payloads. Learn how to handle Apex reserved keywords, avoid common runtime errors like <code>JSON_PARSER_ERROR</code>, and write reliable unit test mock assertions.
-            </p>
-            <a href="salesforce-integration-guide.html" class="mdc-button mdc-button--raised" style="background-color: var(--primary-color); text-transform: none; border-radius: 20px; padding: 12px 24px; height: auto;">
-                <span class="mdc-button__label" style="font-size: 1.05rem; font-weight: 500;">Read the Complete Salesforce Integration Guide</span>
-            </a>
+        <div class="guide-section" style="margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 40px;">
+            <h2 style="font-size: 1.8rem; color: var(--primary-color); margin-bottom: 20px; text-align: center;">Salesforce Deserialization Architecture: Apex Wrapper Classes</h2>
+            <div style="max-width: 900px; margin: 0 auto; line-height: 1.7; font-size: 1.05rem;">
+                <p style="margin-bottom: 20px;">
+                    When building integrations connecting Salesforce to enterprise systems (such as SAP, NetSuite, ERPs, or MuleSoft), computational efficiency is critical. Because Apex synchronous transactions are subject to a strict <strong>10,000ms CPU governor limit</strong>, recursive parsing of raw maps via <code>JSON.deserializeUntyped()</code> runs the risk of limit exhaustion on bulk data streams.
+                </p>
+                <p style="margin-bottom: 24px;">
+                    Statically typed <strong>Apex Wrapper Classes</strong> leverage native, optimized virtual machine parsing (executing at the C++ layer), bypassing interpreted runtime overhead. Designing resilient wrapper schemas requires advanced handling of reserved keyword collisions (such as JSON keys named <code>class</code> or <code>object</code>) and defensive exception structures to isolate schema drift.
+                </p>
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <a href="salesforce-integration-guide.html" class="mdc-button mdc-button--raised" style="background-color: var(--primary-color); text-transform: none; border-radius: 24px; padding: 14px 28px; height: auto; box-shadow: var(--shadow);">
+                        <span class="mdc-button__label" style="font-size: 1.05rem; font-weight: 600; letter-spacing: 0.5px;">Read the Complete Architectural Guide</span>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
     <footer>
         <p>
-        JSON2Apex: Empowering Salesforce Developers Worldwide<br><br>
-        Founded in 2023, JSON2Apex is a dedicated platform providing essential tools and services for Salesforce professionals. Our mission is to streamline Apex development by automating repetitive tasks, saving developers hours on JSON parsing and class generation.<br><br>
-        As a team of certified Salesforce architects and full-stack developers, we understand the challenges of building scalable CRM solutions. With over 10 years of combined experience in enterprise integrations, we've created JSON2Apex to deliver fast, reliable code generation—free for core use, with premium support options for complex projects.<br><br>
+        JSON2Apex: High-Throughput Integration Utilities for Salesforce Developers<br><br>
+        Founded by a team of Certified Salesforce System and Application Architects, JSON2Apex addresses the critical challenges of building scalable, enterprise-grade REST integrations. With over a decade of hands-on experience architecting high-frequency connections between Salesforce Core and external systems (SAP ERP, NetSuite, Oracle, and custom microservices via MuleSoft, Apigee, and Dell Boomi), we engineered this tool to resolve the repetitive bottleneck of writing manual parsing logic.<br><br>
+        Every generated Apex wrapper and corresponding unit test conforms to strict Salesforce security controls, CPU optimization guidelines, and multi-tenant performance standards, ensuring your deployments pass enterprise code quality reviews and scale under peak transactional load.<br><br>
         Why choose us? <br>
-        - Instant, accurate conversions for nested JSON structures.<br>
-        - Automated test classes to ensure code quality.<br>
-        - Committed to the Salesforce community: regular updates based on user feedback.<br><br>
-        Join thousands of devs who've boosted productivity with our tools. Let's build better Salesforce apps together.<br><br>
+        - High-performance, native deserialization compliant wrapper structures.<br>
+        - Automatic escaping of Apex reserved keyword collisions.<br>
+        - Companion 100% coverage unit test class generation.<br><br>
+        Join thousands of enterprise devs who have optimized their integration layers with json2apex. Let's build better integrations together.<br><br>
         &copy; 2026 json2apex. All rights reserved. | 
         <a href="index.html">Home</a> | 
         <a href="salesforce-integration-guide.html">Guide</a> | 

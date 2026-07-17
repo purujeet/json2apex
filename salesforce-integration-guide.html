@@ -4,9 +4,9 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236200ee;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%233700b3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='25' fill='url(%23grad)'/%3E%3Ctext x='50' y='64' font-family='monospace' font-size='38' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EJ2A%3C/text%3E%3C/svg%3E">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salesforce Developer Guide: Apex Wrapper Classes | json2apex</title>
-    <meta name="description" content="In-depth guide to building robust Salesforce integrations using Apex Wrapper Classes. Learn how to handle reserved keywords, avoid JSON_PARSER_ERRORs, and deserialize JSON payloads.">
-    <meta name="keywords" content="Salesforce Integration, Apex Wrapper Class, JSON Deserialization, Salesforce Reserved Keywords, JSON_PARSER_ERROR, Apex callout">
+    <title>Salesforce Deserialization Architecture: Apex Wrapper Design Patterns | json2apex</title>
+    <meta name="description" content="Deep architectural analysis of Salesforce Apex JSON deserialization, governor limits under multi-tenant environments, reserved keyword mapping strategies, and managing dynamic payloads.">
+    <meta name="keywords" content="Salesforce Integration Architecture, Apex Wrapper Class, JSON Deserialization Performance, Salesforce Governor Limits, JSON_PARSER_ERROR, Apex callout design, SAP MuleSoft integration">
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
@@ -143,17 +143,17 @@
         }
 
         .content-section h2 {
-            font-size: 1.6rem;
+            font-size: 1.7rem;
             margin-top: 36px;
             margin-bottom: 16px;
             color: var(--primary-color);
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 2px solid var(--primary-color);
             padding-bottom: 8px;
         }
 
         .content-section h3 {
-            font-size: 1.25rem;
-            margin-top: 24px;
+            font-size: 1.3rem;
+            margin-top: 28px;
             margin-bottom: 12px;
             color: var(--primary-color);
         }
@@ -179,12 +179,30 @@
 
         .info-box p {
             margin: 0;
-            font-style: italic;
+            font-style: normal;
+            line-height: 1.6;
         }
 
         pre[class*="language-"] {
             margin: 20px 0;
             border-radius: 6px;
+        }
+
+        .keyword-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .keyword-table th, .keyword-table td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .keyword-table th {
+            background-color: rgba(98, 0, 238, 0.05);
+            color: var(--primary-color);
         }
 
         footer {
@@ -231,167 +249,197 @@
     </nav>
 
     <header class="hero-section">
-        <h1>Salesforce Integration Guide</h1>
-        <p>A comprehensive reference for building typed JSON wrapper classes and parsing callouts in Salesforce Apex.</p>
+        <h1>Salesforce Deserialization Architecture</h1>
+        <p>A Senior Architect's guide to building high-performance, type-safe integration contracts in Salesforce Apex.</p>
     </header>
 
     <div class="content-section">
-        <h2>Introduction to Salesforce API Integrations</h2>
+        <h2>Apex Deserialization in Multi-Tenant Environments</h2>
         <p>
-            When building integrations within the Salesforce platform, Apex developers frequently interact with external REST APIs. These external APIs communicate by exchanging JSON payloads. To consume these responses inside Salesforce, you must parse the JSON format back into native Apex data structures.
+            In Salesforce's multi-tenant architecture, CPU time is one of the most strictly enforced governor limits. A single synchronous transaction is capped at <strong>10,000 milliseconds of CPU execution time</strong>. When building integrations connecting Salesforce to enterprise systems like SAP, Workday, or MuleSoft, parsing large, deeply nested JSON payloads efficiently becomes a critical design challenge.
         </p>
         <p>
-            While Apex supports untyped JSON deserialization (using generic maps of strings to objects), using <strong>statically typed Apex Wrapper Classes</strong> is the industry-recognized best practice. This approach provides:
+            When deserializing payload data, developers face a choice between two main mechanisms:
         </p>
-        <ul>
-            <li><strong>Compile-time safety:</strong> Errors are caught during development or deployment, rather than crashing at runtime.</li>
-            <li><strong>IDE autocomplete:</strong> Properties are explicitly typed, making code easier to write and maintain in tools like VS Code.</li>
-            <li><strong>Self-documenting APIs:</strong> The wrapper structure models the external JSON schema, making integrations straightforward to understand for team members.</li>
-        </ul>
+        
+        <h3>1. Native Type-Safe Deserialization (Recommended)</h3>
+        <p>
+            Using <code>JSON.deserialize(jsonString, WrapperClass.class)</code> compiles the JSON payload directly into a strongly typed instance of an Apex class. Because the mapping occurs within Salesforce's underlying container layer (executed at the native virtual machine layer in C++), it bypasses the interpreter overhead of Apex. This makes typed deserialization exponentially faster and highly CPU-efficient, particularly for payloads exceeding several megabytes or containing extensive arrays.
+        </p>
+
+        <h3>2. Untyped Deserialization</h3>
+        <p>
+            Using <code>JSON.deserializeUntyped(jsonString)</code> returns a generic <code>Map&lt;String, Object&gt;</code> structure. Navigating this structure requires recursive key lookup and runtime type-casting (e.g., casting elements to nested maps or lists of objects). Traversing this tree in interpreted Apex consumes significant CPU cycles, rapidly eating into transaction limits and risking <em>"System.LimitException: Apex CPU time limit exceeded"</em> errors during bulk operations.
+        </p>
 
         <div class="info-box">
-            <p><strong>Note:</strong> By automating the creation of wrapper and unit test classes, <strong>json2apex</strong> helps developers eliminate hours of repetitive boilerplate coding.</p>
+            <p><strong>Architectural Best Practice:</strong> Define rigid, type-safe Wrapper Classes for integration payloads. Reserve untyped parsing solely for dynamic configurations, variable schema headers, or metadata-driven integrations where the payload structure cannot be predicted at compile time.</p>
         </div>
 
-        <h2>Statically Typed Deserialization in Action</h2>
+        <h2>Technical Debt & Enterprise Maintenance Overhead</h2>
         <p>
-            Salesforce provides the native <code>JSON.deserialize()</code> method to parse JSON content into a specific Apex class. Below is the general pattern used to call and deserialize an API payload:
+            Beyond performance, the choice between typed wrappers and untyped maps impacts the maintenance cost of enterprise codebases:
+        </p>
+        <ul>
+            <li><strong>Compile-Time Validation vs. Silent Failures:</strong> With untyped maps, variable references are hardcoded as string literals (e.g., <code>(String)payloadMap.get('accountEmail')</code>). If an upstream API changes the property name to <code>emailAddress</code>, the code compiles successfully, but fails silently at runtime, resulting in null values and data corruption. With a wrapper class, renaming a field immediately breaks compilation, allowing developers to catch and fix mapping errors during the build stage.</li>
+            <li><strong>Refactoring and Autocomplete:</strong> Wrapper classes provide explicit code contracts. IDEs like VS Code can instantly trace field usage across classes, trigger handlers, and batch utilities. In contrast, finding string-literal map queries spread across thousands of lines of legacy code requires risk-prone regex searches.</li>
+            <li><strong>Self-Documenting Schema:</strong> Apex wrappers serve as living API documentation. A new developer can read the wrapper class structure to immediately understand the external API contract without needing to consult stale external documentation.</li>
+        </ul>
+
+        <h2>Handling Advanced Edge Cases & Keyword Collisions</h2>
+        <p>
+            One of the primary challenges when converting external payloads is keyword collisions. Systems written in languages like JavaScript, Go, or Python frequently use property names that are reserved keywords in Salesforce Apex.
+        </p>
+        <p>
+            Since variable declarations in Apex cannot use reserved keywords, declaring them directly leads to immediate compiler failures:
         </p>
 
-        <pre class="language-apex"><code>// 1. Fetch the JSON response from Http Callout
-HttpResponse response = http.send(request);
-String jsonBody = response.getBody();
+        <table class="keyword-table">
+            <thead>
+                <tr>
+                    <th>JSON Key</th>
+                    <th>Apex Variable Target</th>
+                    <th>Status</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>"class"</code></td>
+                    <td><code>public String class;</code></td>
+                    <td><strong style="color: var(--error-color);">Invalid</strong></td>
+                    <td>Fatal compiler error (Reserved keyword)</td>
+                </tr>
+                <tr>
+                    <td><code>"object"</code></td>
+                    <td><code>public String object;</code></td>
+                    <td><strong style="color: var(--error-color);">Invalid</strong></td>
+                    <td>Fatal compiler error (Reserved keyword)</td>
+                </tr>
+                <tr>
+                    <td><code>"class"</code></td>
+                    <td><code>public String _class;</code></td>
+                    <td><strong style="color: var(--success-color);">Valid</strong></td>
+                    <td>Compiles successfully (Sanitized name)</td>
+                </tr>
+            </tbody>
+        </table>
 
-// 2. Deserialize the response into the Apex wrapper class
-MyWrapperClass data = (MyWrapperClass) JSON.deserialize(jsonBody, MyWrapperClass.class);
-
-// 3. Directly access strongly typed fields
-System.debug('User ID: ' + data.userId);
-System.debug('User Email: ' + data.contactInfo.email);</code></pre>
-
-        <h2>Handling Salesforce Reserved Keywords</h2>
+        <h3>The Regex Key-Replacement Strategy</h3>
         <p>
-            One of the primary challenges when converting external JSON payloads to Apex is **Reserved Keywords**. External services (written in Node.js, Python, or Go) frequently use property names that are protected, reserved compiler words in Apex.
+            Unlike languages like Java (which use annotations like Jackson's <code>@JsonProperty("class")</code> to map variables), Apex does not natively support property aliasing during standard deserialization. 
         </p>
         <p>
-            Examples of reserved keywords in Apex include:
-            <code>class</code>, <code>public</code>, <code>private</code>, <code>limit</code>, <code>group</code>, <code>currency</code>, <code>object</code>, <code>sharing</code>, and <code>void</code>.
-        </p>
-        <p>
-            If you try to declare an Apex class variable with these names:
-        </p>
-        <pre class="language-apex"><code>// THIS WILL CAUSE A COMPILER ERROR IN SALESFORCE
-public class ProductInfo {
-    public String name;
-    public String class; // Fatal compiler error: Reserved keyword
-}</code></pre>
-
-        <h3>How json2apex Automatically Sanitizes Keywords</h3>
-        <p>
-            To prevent these compiler failures, json2apex automatically detects reserved terms in your JSON properties and prefixes them with an underscore (e.g. <code>class</code> is written as <code>_class</code>).
-        </p>
-        <p>
-            To successfully deserialize this sanitized property, you can replace the key in the raw JSON string immediately before parsing:
-        </p>
-        <pre class="language-apex"><code>// Pre-deserialize replacement pattern for reserved keywords
-String sanitizedJson = jsonString.replaceAll('"class":', '"_class":');
-MyWrapperClass result = (MyWrapperClass) JSON.deserialize(sanitizedJson, MyWrapperClass.class);</code></pre>
-        <p>
-            Our tool automatically generates this replacement helper logic directly inside your Apex Wrapper class methods if reserved keywords are detected, saving you from writing custom regex maps.
+            The most CPU-efficient strategy to handle this limitation consists of a **pre-deserialization regex replace** on the raw JSON string before sending it to the parser. By searching for the exact JSON key signature (e.g., <code>"class":</code> or <code>"object":</code>) and replacing it with a sanitized version (e.g., <code>"_class":</code> or <code>"_object":</code>), the deserialization engine can execute natively without throwing exceptions:
         </p>
 
-        <h2>Avoiding Common JSON_PARSER_ERRORs</h2>
-        <p>
-            Runtime parsing exceptions are common during Salesforce integrations. Understanding their cause is the best way to prevent them:
-        </p>
+        <pre class="language-apex"><code>// Native replacement logic wrapper method inside the parsed class
+public static UserResponse parse(String jsonString) {
+    if (jsonString == null) return null;
+    
+    // Replace reserved keywords with sanitized variables
+    String sanitized = jsonString
+        .replaceAll('"(class)":', '"_class":')
+        .replaceAll('"(object)":', '"_object":')
+        .replaceAll('"(limit)":', '"_limit":');
         
-        <h3>1. "JSON_PARSER_ERROR: Expected Array, Got Object"</h3>
-        <p>
-            This error happens when your Apex wrapper declares a property as a List (e.g. <code>List&lt;Product&gt;</code>), but the external API dynamically returns a single JSON object instead of an array.
-        </p>
-        <p>
-            <strong>Fix:</strong> Ensure the external service is configured to always return an array, or parse the property dynamically using <code>JSON.deserializeUntyped()</code> to examine its structure at runtime before mapping it.
-        </p>
-
-        <h3>2. Type Mismatches</h3>
-        <p>
-            If an API payload changes a field dynamically—for example, returning a String (<code>"12.50"</code>) in one request and a Decimal (<code>12.50</code>) in another—Apex's strict typing system will throw a runtime error.
-        </p>
-        <p>
-            <strong>Fix:</strong> Declare variables as standard <code>String</code> or <code>Decimal</code> structures depending on the base API schema. If fields are volatile, parsing them into generic <code>Object</code> formats offers maximum stability.
-        </p>
-
-        <h2>Full Integration Walkthrough & Code Example</h2>
-        <p>
-            Let's review a complete, real-world example mapping an external user detail response.
-        </p>
-
-        <h3>Step 1: The Input JSON Payload</h3>
-        <pre class="language-json"><code>{
-  "id": 1045,
-  "name": "Jane Developer",
-  "email": "jane@example.com",
-  "class": "Premium Tier",
-  "roles": ["Administrator", "Developer"],
-  "meta": {
-    "last_login": "2026-07-17T12:00:00Z",
-    "active": true
-  }
+    return (UserResponse) JSON.deserialize(sanitized, UserResponse.class);
 }</code></pre>
 
-        <h3>Step 2: Generated Apex Wrapper Class</h3>
+        <h2>Architecting for Dynamic Payloads & Schema Drift</h2>
         <p>
-            Notice how the reserved keyword <code>class</code> is automatically sanitized to <code>_class</code>, and a custom <code>parse()</code> utility method is included to process the replacement rule:
+            What happens when an external API introduces dynamic objects or varying node types (Schema Drift)? If a property returns an array of records in one scenario but a single error object in another, standard typed deserialization will throw a <code>JSON_PARSER_ERROR</code> and halt execution.
         </p>
-        <pre class="language-apex"><code>public class UserResponse {
+        <p>
+            To build resilient integrations, implement a **Hybrid Deserialization Pattern**. This combines type-safe wrappers for core properties with untyped maps for volatile segments, wrapped in structured exception handling:
+        </p>
+
+        <pre class="language-apex"><code>public class ResilientParser {
+
+    public String status;
+    public String message;
+    public Object dynamicPayload; // Handled as generic Object to prevent type crashes
+
+    public static ResilientParser safeParse(String jsonBody) {
+        try {
+            // Attempt standard type-safe deserialization
+            return (ResilientParser) JSON.deserialize(jsonBody, ResilientParser.class);
+        } catch (JSONException e) {
+            // Log target deserialization failures to a custom Integration Log object
+            IntegrationLogUtility.logError('API_Schema_Drift', e.getMessage(), jsonBody);
+            
+            // Fall back to a safe untyped parser to extract diagnostics
+            Map&lt;String, Object&gt; untyped = (Map&lt;String, Object&gt;) JSON.deserializeUntyped(jsonBody);
+            ResilientParser fallback = new ResilientParser();
+            fallback.status = 'Error';
+            fallback.message = 'Schema Drift Detected: ' + e.getMessage();
+            return fallback;
+        }
+    }
+}</code></pre>
+
+        <h2>Complete Implementation Blueprint</h2>
+        <p>
+            Below is a full production-ready template showing a sanitized wrapper class along with a robust unit test class that mocks integrations and covers all edge cases.
+        </p>
+
+        <h3>1. The Cleaned Apex Wrapper Class (UserDetail.cls)</h3>
+        <pre class="language-apex"><code>public class UserDetail {
 
     public Integer id;
-    public String name;
-    public String email;
-    public String _class; // Sanitized from "class"
-    public List&lt;String&gt; roles;
-    public MetaInfo meta;
+    public String username;
+    public String _class; // Sanitized from reserved key "class"
+    public String _object; // Sanitized from reserved key "object"
+    public Meta meta;
 
-    public class MetaInfo {
-        public String last_login;
-        public Boolean active;
+    public class Meta {
+        public String createdDate;
+        public Boolean isActive;
     }
 
-    // Custom parse method that cleans reserved keywords
-    public static UserResponse parse(String jsonStr) {
+    public static UserDetail parse(String jsonStr) {
         if (jsonStr == null) return null;
-        // Clean keyword
-        String cleanedJson = jsonStr.replaceAll('"class":', '"_class":');
-        return (UserResponse) JSON.deserialize(cleanedJson, UserResponse.class);
+        
+        // Escape reserved keywords safely with string replacements
+        String sanitized = jsonStr;
+        sanitized = sanitized.replaceAll('"(class)":', '"_class":');
+        sanitized = sanitized.replaceAll('"(object)":', '"_object":');
+        
+        return (UserDetail) JSON.deserialize(sanitized, UserDetail.class);
     }
 }</code></pre>
 
-        <h3>Step 3: Generated Unit Test Class</h3>
+        <h3>2. The Companion Test Class (UserDetail_Test.cls)</h3>
         <p>
-            Writing tests in Salesforce is mandatory to move code to production (75% minimum coverage threshold). The test class verifies proper parsing and asserts details:
+            Salesforce requires code coverage to deploy code to production. This test class verifies both positive parsing flow, reserved keyword sanitization, and null boundary cases.
         </p>
         <pre class="language-apex"><code>@isTest
-private class UserResponse_Test {
+private class UserDetail_Test {
 
     @isTest
-    static void testParse() {
-        String jsonStr = '{"id": 1045, "name": "Jane Developer", "email": "jane@example.com", "class": "Premium Tier", "roles": ["Administrator"], "meta": {"last_login": "2026-07-17T12:00:00Z", "active": true}}';
+    static void testParseValidPayload() {
+        // Raw JSON input with reserved keywords
+        String jsonPayload = '{"id": 9901, "username": "salesforce_dev", "class": "Enterprise", "object": "UserRecord", "meta": {"createdDate": "2026-07-17", "isActive": true}}';
         
         Test.startTest();
-        UserResponse obj = UserResponse.parse(jsonStr);
+        UserDetail result = UserDetail.parse(jsonPayload);
         Test.stopTest();
-
-        System.assert(obj != null);
-        System.assertEquals(1045, obj.id);
-        System.assertEquals('Jane Developer', obj.name);
-        System.assertEquals('Premium Tier', obj._class);
-        System.assertEquals(true, obj.meta.active);
+        
+        // Perform structural assertions
+        System.assertNotEquals(null, result, 'Failed to parse JSON string.');
+        System.assertEquals(9901, result.id, 'Id field mismatch.');
+        System.assertEquals('Enterprise', result._class, 'Sanitized class property mismatch.');
+        System.assertEquals('UserRecord', result._object, 'Sanitized object property mismatch.');
+        System.assertEquals(true, result.meta.isActive, 'Nested boolean mapping mismatch.');
     }
-    
+
     @isTest
-    static void testParseNull() {
-        UserResponse obj = UserResponse.parse(null);
-        System.assertEquals(null, obj);
+    static void testParseNullPayload() {
+        Test.startTest();
+        UserDetail result = UserDetail.parse(null);
+        Test.stopTest();
+        
+        System.assertEquals(null, result, 'Null payload should return null object.');
     }
 }</code></pre>
     </div>
